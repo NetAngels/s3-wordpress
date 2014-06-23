@@ -1,0 +1,125 @@
+ul.netangles_attachments
+{
+}
+
+ul.netangles_attachments li
+{
+    width: 110px;
+    height: 110px;
+    float: left;
+    margin: 10px;
+    border: 1px solid #464646;
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+}
+ul.netangles_attachments li .filename
+{
+   position: absolute;
+   left: 0;
+   bottom:0;
+
+   min-height: 20px;
+   border-top: 1px solid #464646;
+   width:100%;
+   text-align: center;
+   font-weight: 700;
+background: rgba(255,255,255,.8);
+-webkit-box-shadow: inset 0 0 0 1px rgba(0,0,0,.15);
+box-shadow: inset 0 0 0 1px rgba(0,0,0,.15);
+}
+
+
+.netangels_attachment
+{
+    width: 110px;
+    height: 110px;
+    overflow: hidden;
+    clear: none;
+    position: relative;
+}
+.netangels_icon
+{
+ margin: 10px auto 10px auto;
+}
+.thumbnail img , .attachment .thumbnail img
+{
+ position: relative;
+ top: 10px;
+ left: 10px;
+}
+
+div.netangelss3_media_insert_list
+{
+margin-right: 350px;
+width: 80%; 
+}
+.netangelss3_media_insert_list:after
+{
+ content: " ";
+}
+.netangelss3_media_insert_panel
+{
+position: fixed;
+right: 0;
+top:0;
+height: 100%;
+width: 330px;
+padding: 0 16px 24px;
+z-index: 75;
+background: #f3f3f3;
+border-left: 1px solid #ddd;
+overflow: auto;
+-webkit-overflow-scrolling: touch;
+}
+.netangelss3_media_insert_panel:after
+{
+ content: " ";
+}
+
+a.netangels_button
+{
+cursor: pointer;
+background-color: rgb(217, 44, 35);
+-webkit-border-radius: 3px;
+-moz-border-radius: 3px;
+border-radius: 3px;
+border: 1px solid #464646;
+color: #FFF;
+display: block;
+float: left;
+font-family: 'Open Sans', sans-serif;
+font-size: 13px;
+height: 30px;
+line-height: 28px;
+margin-bottom: 0px;
+margin-left: 10px;
+margin-right: 0px;
+margin-top: 15px;
+outline-style: none;
+outline-width: 0px;
+padding-bottom: 2px;
+padding-left: 12px;
+padding-right: 12px;
+padding-top: 0px;
+text-decoration: none solid rgb(209, 199, 199);
+text-shadow: none;
+transition-duration: 0.05s, 0.05s, 0.05s;
+transition-property: border, background, color;
+transition-timing-function: ease-in-out, ease-in-out, ease-in-out;
+vertical-align: top;
+white-space: nowrap;
+}
+.netangels_preview
+{
+ margin-top: 10px;
+ margin-bottom: 10px;
+ margin-left: auto;
+ margin-right: auto;
+ background-position: center;
+ background-repeat: no-repeat;
+ background-size: contain;
+ width: 50%;
+ height: 150px;
+
+}
