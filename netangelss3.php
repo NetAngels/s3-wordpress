@@ -37,9 +37,10 @@ function on_install()
 
 function on_uninstall()
 {
-    //remove_option( 'key_id' );
-    //remove_option( 'secret_key' );
-    //remove_option( 'bucket' );
+    remove_option( 'netangelss3_key_id' );
+    remove_option( 'netangelss3_secret_key' );
+    remove_option( 'netangelss3_bucket' );
+
 }
 
 register_activation_hook( __FILE__, 'on_install' );
@@ -49,27 +50,45 @@ register_deactivation_hook( __FILE__, 'on_uninstall' );
 /*** VIEW IN ADMIN AREA ***/
 function netangelss3_options()
 {
+    $save = false;
     if ($_POST)
     {
+       $save = true;
        update_option( 'netangelss3_key_id', $_POST['key_id']);
        update_option( 'netangelss3_secret_key', $_POST['secret_key']);
     }
-    $key_id = get_option('netangelss3_key_id');
+    $key_id     = get_option('netangelss3_key_id');
     $secret_key = get_option('netangelss3_secret_key');
     include('template/options.php');
-    if ($_GET['action']=='list')
-    {
-       include('filelist.php');
-    }
-    if ($_GET['action']=='testconnect')
-    {
-       include('testconnect.php');
-    }
+}
+function netangelss3_options_files_to_s3()
+{
+
+    $key_id     = get_option('netangelss3_key_id');
+    $secret_key = get_option('netangelss3_secret_key');
+    $files = array();
+    $upload_dir = wp_upload_dir();
+    filelist_get(&$files,$upload_dir['basedir']);
+    include('template/files_to_s3.php');
+
+}
+add_action( 'wp_ajax_netangelss3_send_file', 'netangelss3_send_file' );
+
+function netangelss3_send_file() 
+{
+    global $wpdb; 
+    global $s3;
+    // Handle request then generate response using WP_Ajax_Response
+    $r =  sendtocloud($s3,$_REQUEST['file'],basename($_REQUEST['file']));
+    print $r.' '.$_REQUEST['file']. ' ' .basename($_REQUEST['file']) ;
+    //wp_ajax_die();
+    die();
 }
 
 function netangelss3_options_add_to_menu()
 {
     add_plugins_page('NetAngels S3','NetAngels S3', 'manage_options', 'netangelss3-options', 'netangelss3_options');
+    add_plugins_page('NetAngels S3','Перенос файлов в NetAngels S3', 'manage_options', 'netangelss3-options-files-to-s3', 'netangelss3_options_files_to_s3');
 }
 add_action('admin_menu', 'netangelss3_options_add_to_menu');
 /*** END VIEW ADMIN AREA ***/

@@ -1,5 +1,8 @@
 <div class="wrap">
 <h2>Настройки NetAngels S3</h2>
+<?php if ($save) { ?>
+<div id="message" class="updated"><p>Данные сохранены.</p></div>
+<?php } ?>
 <form action="" method="post">
 <table class="form-table">
         <tbody>
