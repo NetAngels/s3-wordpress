@@ -51,7 +51,11 @@ function s3_create()
     $s3 = new S3($key_id, $secret_key);
     return $s3;
 }
-
+function replace_in_post_and_pages($from,$to)
+{
+global $wpdb;
+$wpdb->query($wpdb->prepare('UPDATE wp_posts SET post_content = REPLACE ( post_content, %s,  %s) WHERE post_content LIKE "%%%s%%"',$from,$to,$from) );
+}
 
 function sendtocloud($s3inc,$uploadFile,$objname='')
 {
@@ -72,10 +76,10 @@ function sendtocloud($s3inc,$uploadFile,$objname='')
  if (!$s3inc->putObjectFile($uploadFile, getDefaultBucket(), $objname, S3::ACL_PUBLIC_READ)) {
     return false;
  }
- return true;
+ return netangelss3_url_getFullUrl($objname);
 }
 
-function url_getFullUrl($name)
+function netangelss3_url_getFullUrl($name)
 {
     $bucket = getDefaultBucket();
     $url = 'http://'.$bucket.'.s3.netangels.ru/'.$name;

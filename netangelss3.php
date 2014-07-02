@@ -33,6 +33,7 @@ function on_install()
     $domain = strtr($domain,array('http://'=>'','https://'=>'','/'=>'-','.'=>'-'));
     $bucket='wordpress-'.$domain;
     add_option( 'netangelss3_bucket', $bucket, '', 'yes' );
+    add_option( 'netangelss3_auto_enable','0','','yes' );
 }
 
 function on_uninstall()
@@ -40,7 +41,7 @@ function on_uninstall()
     remove_option( 'netangelss3_key_id' );
     remove_option( 'netangelss3_secret_key' );
     remove_option( 'netangelss3_bucket' );
-
+    remove_option( 'netangelss3_auto_enable' );
 }
 
 register_activation_hook( __FILE__, 'on_install' );
@@ -54,11 +55,13 @@ function netangelss3_options()
     if ($_POST)
     {
        $save = true;
-       update_option( 'netangelss3_key_id', $_POST['key_id']);
-       update_option( 'netangelss3_secret_key', $_POST['secret_key']);
+       update_option( 'netangelss3_key_id'      , $_POST['key_id']);
+       update_option( 'netangelss3_secret_key'  , $_POST['secret_key']);
+       update_option( 'netangelss3_auto_enable' , $_POST['enable']);
     }
     $key_id     = get_option('netangelss3_key_id');
     $secret_key = get_option('netangelss3_secret_key');
+    $enable     = get_option('netangelss3_auto_enable');
     include('template/options.php');
 }
 function netangelss3_options_files_to_s3()
@@ -66,9 +69,16 @@ function netangelss3_options_files_to_s3()
 
     $key_id     = get_option('netangelss3_key_id');
     $secret_key = get_option('netangelss3_secret_key');
+    $enable     = get_option('netangelss3_auto_enable');
     $files = array();
     $upload_dir = wp_upload_dir();
     filelist_get(&$files,$upload_dir['basedir']);
+    // Security FIX - HIDE FULL PATH
+    for($i=0;$i< count($files); $i++)
+    {
+       $files[$i] = strtr($files[$i],array($upload_dir['basedir'] => ''));
+    }
+    
     include('template/files_to_s3.php');
 
 }
@@ -78,9 +88,27 @@ function netangelss3_send_file()
 {
     global $wpdb; 
     global $s3;
+    $upload_dir = wp_upload_dir();
     // Handle request then generate response using WP_Ajax_Response
-    $r =  sendtocloud($s3,$_REQUEST['file'],basename($_REQUEST['file']));
-    print $r.' '.$_REQUEST['file']. ' ' .basename($_REQUEST['file']) ;
+    $name = strtr(substr($_REQUEST['file'],1),
+    array(
+	'/' => '-',
+    	"\\" => '-',
+	':' => '-',
+    ));
+    $r =  sendtocloud($s3,$upload_dir['basedir'].$_REQUEST['file'],$name);
+    if (!$r) die('ERROR');
+    if ($_REQUEST['move'] == '1')
+    {
+
+	$upload_dir = wp_upload_dir();
+        $from1 = $_REQUEST['file'];
+        $from2 = $upload_dir['baseurl'].$from1;
+	replace_in_post_and_pages($from2,$r);
+	replace_in_post_and_pages($from1,$r);
+        unlink($upload_dir['basedir'].$_REQUEST['file']);
+    }
+    print $r.' '.$upload_dir['basedir'].$_REQUEST['file']. ' ' .$name.' '.$r ;
     //wp_ajax_die();
     die();
 }
@@ -93,13 +121,14 @@ function netangelss3_options_add_to_menu()
 add_action('admin_menu', 'netangelss3_options_add_to_menu');
 /*** END VIEW ADMIN AREA ***/
 /*** WP_CRON ***/
-add_action( 'my_task_hook', 'my_task_function' );
+add_action( 'netangelss3_try_send_to_cloud_auto', 'netangelss3_try_send_to_cloud_auto' );
 
-if ( ! wp_next_scheduled( 'my_task_hook' ) ) {
+if ( ! wp_next_scheduled( 'netangelss3_try_send_to_cloud_auto' ) ) {
   wp_schedule_event( time(), 'hourly', 'my_task_hook' );
 }
 
-function my_task_function() {
+function netangelss3_try_send_to_cloud_auto() {
+    $enable     = get_option('netangelss3_auto_enable');
  //  wp_mail( 'admin@dotsb.net.ru', 'Автоматическое письмо', 'Запланированное письмо от WordPress.');
 }
 /*** END CRON ***/
@@ -134,7 +163,7 @@ function getTypeByName($name)
 function getLiElement($item)
 {
     $name = $item['name'];
-    $url = url_getFullUrl($name);
+    $url = netangelss3_url_getFullUrl($name);
     $type = getTypeByName($name);
     $s = '<li class="netangels_attachment" data-fileurl="'.$url.'" data-type="'.$type['maintype'].'">';
     $s .= '<div class="type-'.$type['maintype'].'">';

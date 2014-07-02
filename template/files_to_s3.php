@@ -4,13 +4,17 @@
 <div id="message" class="updated"><p>Данные сохранены.</p></div>
 <?php } ?>
 <script>
-function send_file(fl,callbk)
+function netangelss3_send_file(fl,callbk)
 {
+    var move = 0;
+    if (jQuery('#move_to_cloud').is(':checked')) move = 1;
+    jQuery('#process').html('Обрабатываю: '+fl);
     jQuery.post(
     ajaxurl, 
     {
         'action': 'netangelss3_send_file',
-        'file':   fl
+        'file':   fl,
+        'move':   move
     }, 
     function(response){
         //if callbk != nullcallbk(respons);
@@ -20,23 +24,25 @@ function send_file(fl,callbk)
 		jQuery(this).parent().parent().remove();
         }
         });
-        send_checked_files_to_cloud();
+        netangelss3_send_checked_files_to_cloud();
     }
     );
 }
 
-function send_checked_files_to_cloud()
+function netangelss3_send_checked_files_to_cloud()
 {
   var file = jQuery('#the-list input.file:checked').val()
   if (file === undefined) return false;
-  send_file(file);
+  netangelss3_send_file(file);
 }
 jQuery(document).ready(function() {
-   jQuery('.send_to_cloud').click(function() {send_checked_files_to_cloud()});
+   jQuery('.send_to_cloud').click(function() {netangelss3_send_checked_files_to_cloud()});
 });
 
 </script>
-<p class="submit"><input type="submit" name="submit" id="submit" class="button button-primary send_to_cloud" value="Отправить в облако"></p>
+<p class="submit"><input type="submit" name="submit" id="submit" class="button button-primary send_to_cloud" value="Отправить в облако" > &nbsp; Переносить в облако <input id="move_to_cloud" type="checkbox"></p>
+<div id="process"></div>
+<br />
 <table class="wp-list-table widefat fixed pages">
     <thead>
     <tr>
