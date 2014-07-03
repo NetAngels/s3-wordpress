@@ -33,6 +33,16 @@
 	<th scope="row"><label for="secret_key">Secret Key(secret_key):</label></th>
 	<td><input name="secret_key" type="text" id="secret_key" value="<?php echo $secret_key; ?>" class="regular-text"></td>
         </tr>
+        <tr valign="top">
+	<th scope="row"><label for="enable">Автоматический перенос файлов в Netangels S3:</label></th>
+	<td>
+	    <input name="enable" type="checkbox" id="enable" <?php if ($enable == '1') { ?>checked="checked" <?php } ?>  class="regular-checkbox">
+	    <span class="description">
+	    Все загруженные файлы будут переноситься на NetAngels S3
+	    </span>
+	</td>
+        </tr>
+
     </tbody></table>
     <p class="submit">
         <input type="submit" name="Submit" class="button-primary" value="Сохранить изменения">

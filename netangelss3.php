@@ -55,9 +55,10 @@ function netangelss3_options()
     if ($_POST)
     {
        $save = true;
+       ( $_POST['enable'] == 'on') ? ( $enable = '1'):( $enable = '0');
        update_option( 'netangelss3_key_id'      , $_POST['key_id']);
        update_option( 'netangelss3_secret_key'  , $_POST['secret_key']);
-       update_option( 'netangelss3_auto_enable' , $_POST['enable']);
+       update_option( 'netangelss3_auto_enable' , $enable);
     }
     $key_id     = get_option('netangelss3_key_id');
     $secret_key = get_option('netangelss3_secret_key');
@@ -78,7 +79,6 @@ function netangelss3_options_files_to_s3()
     {
        $files[$i] = strtr($files[$i],array($upload_dir['basedir'] => ''));
     }
-    
     include('template/files_to_s3.php');
 
 }
@@ -89,13 +89,7 @@ function netangelss3_send_file()
     global $wpdb; 
     global $s3;
     $upload_dir = wp_upload_dir();
-    // Handle request then generate response using WP_Ajax_Response
-    $name = strtr(substr($_REQUEST['file'],1),
-    array(
-	'/' => '-',
-    	"\\" => '-',
-	':' => '-',
-    ));
+    $name = netangelss3_s3_name($_REQUEST['file']);
     $r =  sendtocloud($s3,$upload_dir['basedir'].$_REQUEST['file'],$name);
     if (!$r) die('ERROR');
     if ($_REQUEST['move'] == '1')
@@ -104,8 +98,8 @@ function netangelss3_send_file()
 	$upload_dir = wp_upload_dir();
         $from1 = $_REQUEST['file'];
         $from2 = $upload_dir['baseurl'].$from1;
-	replace_in_post_and_pages($from2,$r);
-	replace_in_post_and_pages($from1,$r);
+	netangelss3_replace_in_post_and_pages($from2,$r);
+	netangelss3_replace_in_post_and_pages($from1,$r);
         unlink($upload_dir['basedir'].$_REQUEST['file']);
     }
     print $r.' '.$upload_dir['basedir'].$_REQUEST['file']. ' ' .$name.' '.$r ;
@@ -129,7 +123,28 @@ if ( ! wp_next_scheduled( 'netangelss3_try_send_to_cloud_auto' ) ) {
 
 function netangelss3_try_send_to_cloud_auto() {
     $enable     = get_option('netangelss3_auto_enable');
- //  wp_mail( 'admin@dotsb.net.ru', 'Автоматическое письмо', 'Запланированное письмо от WordPress.');
+    if ($enable != '1')
+    {
+       return false;
+    }
+    $files = array();
+    $upload_dir = wp_upload_dir();
+    filelist_get(&$files,$upload_dir['basedir']);
+    $count = count($files);
+    if ($count > 10) $count=10; // Загружаем 10 файлов за раз 
+    for($i=0;$i<=$count; $i)
+    {
+        $name1 = strtr($files[$i],array($upload_dir['basedir'] => ''));
+        $name2 = netangelss3_s3_name($name1);
+	$r =  sendtocloud($s3,$files[$i],$name2);
+	if (!$r) die('ERROR');
+	$from1 = $name1;
+	$from2 = $upload_dir['baseurl'].$from1;
+	netangelss3_replace_in_post_and_pages($from2,$r);
+	netangelss3_replace_in_post_and_pages($from1,$r);
+	unlink($upload_dir['basedir'].$name1);
+        //wp_mail( 'admin@dotsb.net.ru', 'Автоматическое письмо', 'Запланированное письмо от WordPress.');
+   }
 }
 /*** END CRON ***/
 /*** Attach url filter ***/
@@ -186,7 +201,7 @@ function getLiElement($item)
 }
 
 
-function view_netangelss3_tab()
+function netangelss3_view_tab()
 {
     global $s3;
     //------------------------------------------------------
@@ -264,4 +279,22 @@ function view_netangelss3_tab()
     iframe_footer();
     return true;
 }
-add_filter('media_upload_netangelss3', 'view_netangelss3_tab');
+add_filter('media_upload_netangelss3', 'netangelss3_view_tab');
+
+
+/* ATTACHMENT PATCH */
+
+function netangelss3_wp_get_attachment_url( $link, $id ) { 
+    $file_path = get_attached_file( $id );
+    if (file_exists($file_path))
+    {
+       return $link;
+    }
+    $upload_dir = wp_upload_dir();
+    $link = strtr($link,array($upload_dir['baseurl'] => ''));
+    $link = netangelss3_s3_name($link);
+    $link = netangelss3_url_getFullUrl($link);
+    return $link; 
+} 
+add_filter( 'wp_get_attachment_url', 'netangelss3_wp_get_attachment_url',10,2 ); 
+

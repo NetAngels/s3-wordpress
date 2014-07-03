@@ -51,7 +51,7 @@ function s3_create()
     $s3 = new S3($key_id, $secret_key);
     return $s3;
 }
-function replace_in_post_and_pages($from,$to)
+function netangelss3_replace_in_post_and_pages($from,$to)
 {
 global $wpdb;
 $wpdb->query($wpdb->prepare('UPDATE wp_posts SET post_content = REPLACE ( post_content, %s,  %s) WHERE post_content LIKE "%%%s%%"',$from,$to,$from) );
@@ -77,6 +77,17 @@ function sendtocloud($s3inc,$uploadFile,$objname='')
     return false;
  }
  return netangelss3_url_getFullUrl($objname);
+}
+
+function netangelss3_s3_name($name)
+{
+    $name = strtr(substr($name,1),
+    array(
+        '/' => '-',
+        "\\" => '-',
+        ':' => '-',
+    ));
+    return $name;
 }
 
 function netangelss3_url_getFullUrl($name)
