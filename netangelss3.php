@@ -99,7 +99,7 @@ function netangelss3_send_file()
         $from1 = $_REQUEST['file'];
         $from2 = $upload_dir['baseurl'].$from1;
 	netangelss3_replace_in_post_and_pages($from2,$r);
-	netangelss3_replace_in_post_and_pages($from1,$r);
+	//netangelss3_replace_in_post_and_pages($from1,$r);
         unlink($upload_dir['basedir'].$_REQUEST['file']);
     }
     print $r.' '.$upload_dir['basedir'].$_REQUEST['file']. ' ' .$name.' '.$r ;
@@ -118,11 +118,15 @@ add_action('admin_menu', 'netangelss3_options_add_to_menu');
 add_action( 'netangelss3_try_send_to_cloud_auto', 'netangelss3_try_send_to_cloud_auto' );
 
 if ( ! wp_next_scheduled( 'netangelss3_try_send_to_cloud_auto' ) ) {
-  wp_schedule_event( time(), 'hourly', 'my_task_hook' );
+  wp_schedule_event( time(), 'hourly', 'netangelss3_try_send_to_cloud_auto' );
 }
 
 function netangelss3_try_send_to_cloud_auto() {
     $enable     = get_option('netangelss3_auto_enable');
+    
+    $admin_email = get_settings('admin_email');
+    wp_mail( $admin_email, 'Автоматическое письмо', 'Запланированное письмо от WordPress.'.$enable);
+    
     if ($enable != '1')
     {
        return false;
@@ -132,19 +136,23 @@ function netangelss3_try_send_to_cloud_auto() {
     filelist_get(&$files,$upload_dir['basedir']);
     $count = count($files);
     if ($count > 10) $count=10; // Загружаем 10 файлов за раз 
+    $s = '';
     for($i=0;$i<=$count; $i)
     {
         $name1 = strtr($files[$i],array($upload_dir['basedir'] => ''));
         $name2 = netangelss3_s3_name($name1);
 	$r =  sendtocloud($s3,$files[$i],$name2);
+        $s .= $files[$i].'=>'.$r."\r\n";
 	if (!$r) die('ERROR');
 	$from1 = $name1;
 	$from2 = $upload_dir['baseurl'].$from1;
+        //netangelss3_replace_in_post_and_pages($from1,$r);
 	netangelss3_replace_in_post_and_pages($from2,$r);
-	netangelss3_replace_in_post_and_pages($from1,$r);
 	unlink($upload_dir['basedir'].$name1);
-        //wp_mail( 'admin@dotsb.net.ru', 'Автоматическое письмо', 'Запланированное письмо от WordPress.');
+        
    }
+   $admin_email = get_settings('admin_email');
+   wp_mail( $admin_email, 'Автоматическое письмо', 'Запланированное письмо от WordPress.'.$s);
 }
 /*** END CRON ***/
 /*** Attach url filter ***/

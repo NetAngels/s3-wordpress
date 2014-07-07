@@ -81,12 +81,15 @@ function sendtocloud($s3inc,$uploadFile,$objname='')
 
 function netangelss3_s3_name($name)
 {
-    $name = strtr(substr($name,1),
+    $name = substr($name,1);
+    /*
+    $name = strtr($name,
     array(
         '/' => '-',
         "\\" => '-',
         ':' => '-',
     ));
+    */
     return $name;
 }
 
