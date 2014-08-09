@@ -79,6 +79,32 @@ function sendtocloud($s3inc,$uploadFile,$objname='')
  return netangelss3_url_getFullUrl($objname);
 }
 
+function delete_in_cloud($s3inc,$name)
+{
+ if (!$s3inc)
+ {
+   return false;
+ }
+ //$url = netangelss3_url_getFullUrl($name);
+ 
+ if (!$s3inc->deleteObject(getDefaultBucket(), $name)) {
+   return false;
+ }
+ return true;
+}
+function getfromcloud($s3inc, $name,$destfile)
+{
+    $url = netangelss3_url_getFullUrl($name);
+    $fp = fopen ($destfile, 'w+');//This is the file where we save the    information
+    $ch = curl_init(str_replace(" ","%20",$url));//Here is the file we are downloading, replace spaces with %20
+    curl_setopt($ch, CURLOPT_TIMEOUT, 50);
+    curl_setopt($ch, CURLOPT_FILE, $fp); // write curl response to file
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_exec($ch); // get curl response
+    curl_close($ch);
+    fclose($fp);
+}
+
 function netangelss3_s3_name($name)
 {
     $name = substr($name,1);

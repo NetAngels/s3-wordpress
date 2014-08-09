@@ -65,6 +65,12 @@ function netangelss3_options()
     $enable     = get_option('netangelss3_auto_enable');
     include('template/options.php');
 }
+function netangelss3_options_files_from_s3()
+{
+    global $s3;
+    $files  =   s3_getList($s3);
+    include('template/files_from_s3.php');
+}
 function netangelss3_options_files_to_s3()
 {
 
@@ -82,7 +88,48 @@ function netangelss3_options_files_to_s3()
     include('template/files_to_s3.php');
 
 }
-add_action( 'wp_ajax_netangelss3_send_file', 'netangelss3_send_file' );
+
+
+
+function netangelss3_get_from_cloud() 
+{
+    global $wpdb; 
+    global $s3;
+    $upload_dir = wp_upload_dir();
+    $name       = $_REQUEST['file'];
+    $basename   = basename($_REQUEST['file']);
+    $path       = strtr($name,array($basename=>''));
+    $simple_path='/from_netangels_s3/'.$path;
+    $simple_file_path = '/from_netangels_s3/'.$path.$basename;
+    $path       = $upload_dir['basedir'].$simple_path;
+    $destpath   = $upload_dir['basedir'].$simple_file_path;
+    $destpath_url = $upload_dir['baseurl'].$simple_file_path;
+    $srcpath_url = netangelss3_url_getFullUrl($name);
+    mkdir($path, 0777, true);
+    print $path." \r\n";
+    print $destpath ." \r\n";
+    print $destpath_url  ." \r\n";
+    print $srcpath_url  ." \r\n";
+    
+    getfromcloud($s3,$name,$destpath);
+
+    netangelss3_replace_in_post_and_pages($srcpath_url,$destpath_url );
+    print 'netangelss3_replace_in_post_and_pages("'.$srcpath_url.'","'.$destpath_url.'");'." \r\n";
+    $attachment = array(
+	    'guid'           => $upload_dir['baseurl'].$simple_file_path, 
+	    'post_mime_type' => $filetype = wp_check_filetype( $basename, null ),
+	    'post_title'     => preg_replace( '/\.[^.]+$/', '', $basename ),
+	    'post_content'   => '',
+	    'post_status'    => 'inherit'
+    );
+    $attach_id = wp_insert_attachment( $attachment, $upload_dir['basedir'].$simple_file_path);
+    if ($_REQUEST['move'] == '1')
+    {
+	delete_in_cloud($s3,$name);
+    }
+    die();
+}
+add_action( 'wp_ajax_netangelss3_get_from_cloud', 'netangelss3_get_from_cloud' );
 
 function netangelss3_send_file() 
 {
@@ -106,11 +153,14 @@ function netangelss3_send_file()
     //wp_ajax_die();
     die();
 }
+add_action( 'wp_ajax_netangelss3_send_file', 'netangelss3_send_file' );
+
 
 function netangelss3_options_add_to_menu()
 {
     add_plugins_page('NetAngels S3','NetAngels S3', 'manage_options', 'netangelss3-options', 'netangelss3_options');
     add_plugins_page('NetAngels S3','Перенос файлов в NetAngels S3', 'manage_options', 'netangelss3-options-files-to-s3', 'netangelss3_options_files_to_s3');
+    add_plugins_page('NetAngels S3','Перенос файлов из NetAngels S3', 'manage_options', 'netangelss3-options-files-from-s3', 'netangelss3_options_files_from_s3');
 }
 add_action('admin_menu', 'netangelss3_options_add_to_menu');
 /*** END VIEW ADMIN AREA ***/
