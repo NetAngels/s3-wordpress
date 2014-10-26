@@ -84,11 +84,11 @@ function netangelss3_onInstall()
 
 function netangelss3_onUninstall()
 {
-    remove_option('netangelss3_key_id');
-    remove_option('netangelss3_secret_key');
-    remove_option('netangelss3_bucket');
-    remove_option('netangelss3_auto_enable');
-    remove_option('netangelss3_connection_status');
+    delete_option('netangelss3_key_id');
+    delete_option('netangelss3_secret_key');
+    delete_option('netangelss3_bucket');
+    delete_option('netangelss3_auto_enable');
+    delete_option('netangelss3_connection_status');
 }
 
 register_activation_hook(__FILE__, 'netangelss3_onInstall');
