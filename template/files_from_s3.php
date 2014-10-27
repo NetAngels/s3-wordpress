@@ -52,7 +52,10 @@
                                  value="<?php echo NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD; ?>">
             &nbsp; <?php echo NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD; ?> <input id="move_to_cloud"
                                                                                                   type="checkbox"></p>
-
+        <span class="description">
+        <?php echo NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR; ?>
+        <?php echo NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR2; ?>
+    </span>
         <div id="process"></div>
         <br/>
         <table class="wp-list-table widefat fixed pages">

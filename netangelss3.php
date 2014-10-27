@@ -27,9 +27,9 @@ define(NETANGELSS3_FROM_CLOUD_CHMOD_DIR, 0777);
 define(NETANGELSS3_FROM_CLOUD_CHMOD, 0777);
 define(NETANGELSS3_ENDPOINT, 's3.netangels.ru');
 
-define(NETANGELSS3_ERRORS_EMPTY_KEY, 'Не указан key id');
-define(NETANGELSS3_ERRORS_EMPTY_SECRET_KEY, 'Не указан secret key');
-define(NETANGELSS3_ERRORS_BAD_KEYS, 'Не правильно указаны ключи.');
+define(NETANGELSS3_ERRORS_EMPTY_KEY, 'Не указан key_id');
+define(NETANGELSS3_ERRORS_EMPTY_SECRET_KEY, 'Не указан secret_key');
+define(NETANGELSS3_ERRORS_BAD_KEYS, 'Неправильно указаны ключи.');
 
 define(NETANGELSS3_MESSAGES_SAVED, 'Сохранено');
 define(NETANGELSS3_MESSAGES_CREATE_BUCKET, 'Корзины не существует. Создаем');
@@ -44,11 +44,11 @@ define(NETANGELSS3_MESSAGES_SECRET_KEY, 'Secret Key');
 
 define(NETANGELSS3_LINK_GET_KEYS, 'https://panel.netangels.ru/s3/account/');
 define(NETANGELSS3_MESSAGES_OPEN_LINK1, 'Откройте эту страницу');
-define(NETANGELSS3_MESSAGES_SHOW_KEYS, ' и нажмите "Показать реквизиты" затем скопируйте их в соотвествующие поля ниже.');
+define(NETANGELSS3_MESSAGES_SHOW_KEYS, ' и нажмите "Показать реквизиты", затем скопируйте их в соотвествующие поля ниже.');
 define(NETANGELSS3_LINK_VIDEO_GET_KEYS, 'http://www.youtube.com/watch?v=skFoVwc_BCQ&feature=youtu.be');
-define(NETANGELSS3_MESSAGE_VIDEO_GET_KEYS, 'Посмотреть видео как это делается.');
+define(NETANGELSS3_MESSAGE_VIDEO_GET_KEYS, 'Видео-инструкция');
 
-define(NETANGELSS3_MESSAGES_ALL_FILE_WILL_MOVE_TO_CLOUD, 'Все загружаемые вами файлы будут автоматически переноситься в Облачное хранилище NetAngels');
+define(NETANGELSS3_MESSAGES_ALL_FILE_WILL_MOVE_TO_CLOUD, 'Все загружаемые вами файлы будут автоматически переноситься в Облачное S3 хранилище NetAngels');
 define(NETANGELSS3_MESSAGES_AUTO_MOVE_TO_CLOUD, 'Автоматический перенос файлов в Netangels S3');
 /* end OPtion page */
 define(NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_FILES_TO, 'Перенос файлов в NetAngels S3');
@@ -56,14 +56,21 @@ define(NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_FILES_FROM, 'Перенос фа
 
 
 /* TO page */
-define(NETANGELSS3_MESSAGES_MANUAL_TO_THIS_LOCAL_FILES, 'Это локальные файлы которые ранее были загружены вмести с записями, но вы можете загрузить их в облачное хранилище Netangels.Пути в записях и страницах будут изменены автоматическии');
+define(NETANGELSS3_MESSAGES_MANUAL_TO_THIS_LOCAL_FILES, 'Локальные файлы, которые ранее были загружены вместе с записями. Вы можете загрузить
+их в Облачное хранилище Netangels. При этом, пути к файлам, в записях и страницах, будут изменены автоматически.');
 define(NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_SEND_TO_CLOUD, 'Отправить в облако');
 define(NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_LOCAL, 'Переносить в облако ');
 /* FROM page */
-define(NETANGELSS3_MESSAGES_MANUAL_TO_THIS_S3_FILES, 'Эти файлы были ранее загружены в Облачное хранилище NetAngels. При выгрузке из хранилища они будут помещены в папку from_netangels_s3. Пути в записях и страницах будут изменены автоматическии');
+define(NETANGELSS3_MESSAGES_MANUAL_TO_THIS_S3_FILES, 'Эти файлы были ранее загружены в Облачное хранилище NetAngels.
+В случае выгрузки из хранилища они будут помещены в папку "from_netangels_s3". При этом, пути к файлам, в записях и страницах, будут изменены автоматически.');
 define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD, 'Загрузить из облака');
 define(NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD, 'Удалять в облаке');
 
+
+define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD_DESCR,'Как только вы нажмете на кнопку "'.NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD.'" начнется процесс копирования из Облачного S3 хранилище NetAngels в хранилище вашего Wordpress. Если вы поставите галочку '.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD.' то файлы в облачном хранилище будут удаляться.');
+define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD_DESCR2,'Пожалуйста не закрывайте окно и оставайтесь на этой странице до завершения процесса');
+define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR,'Как только вы нажмете на кнопку "'.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_SEND_TO_CLOUD.' начнется процесс копирования ваших файлов из Wordpress в Облачное S3 хранилище NetAngels. Если вы поставите галочку '.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_LOCAL.' то после переноса локальные файлы будут удаляться');
+define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR2,'Пожалуйста не закрывайте окно и оставайтесь на этой странице до завершения процесса');
 
 include('classes/S3.php');
 require('functions.php');
@@ -268,8 +275,8 @@ function netangelss3_options_add_to_menu()
 {
     add_plugins_page('NetAngels S3', 'NetAngels S3', 'manage_options', 'netangelss3-options', 'netangelss3_options');
     if (NETANGELSS3_SHOW_MOVE_LINK_IN_MENU) {
-        add_plugins_page('NetAngels S3', 'Перенос файлов в NetAngels S3', 'manage_options', 'netangelss3-options-files-to-s3', 'netangelss3_optionsFilesToS3');
-        add_plugins_page('NetAngels S3', 'Перенос файлов из NetAngels S3', 'manage_options', 'netangelss3-options-files-from-s3', 'netangelss3_optionsFilesFromS3');
+        add_plugins_page('NetAngels S3', NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_FILES_TO, 'manage_options', 'netangelss3-options-files-to-s3', 'netangelss3_optionsFilesToS3');
+        add_plugins_page('NetAngels S3', NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_FILES_FROM, 'manage_options', 'netangelss3-options-files-from-s3', 'netangelss3_optionsFilesFromS3');
     } else {
     }
 }
@@ -446,7 +453,6 @@ function netangelss3_uploadTask()
     $count = count($files);
     if ($count > NETANGELSS3_MAX_FILES_PER_TIME) $count = NETANGELSS3_MAX_FILES_PER_TIME;
     $s = '';
-    wp_mail('admin@dotsb.net.ru', 'Automatic email 3 ' . date('d.m-Y H:i:s'), 'Automatic scheduled email from WordPress.' . $count);
     for ($i = 0; $i <= $count; $i++) {
         $name1 = strtr($files[$i], array($upload_dir['basedir'] => ''));
         $name2 = netangelss3_s3_name($name1);
