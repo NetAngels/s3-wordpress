@@ -18,7 +18,11 @@ define(NETANGELSS3_SEL, 'Выбрать');
 define(NETANGELSS3_FILE, 'файл');
 define(NETANGELSS3_SIZE, 'размер');
 define(NETANGELSS3_DESCR, 'описание');
-
+define(NETANGELSS3_CANCEL,'Отмена');
+define(NETANGELSS3_CANCELED_PROCESS,'Отменяю');
+define(NETANGELSS3_CANCELED,'Отменено');
+define(NETANGELSS3_SAVE, 'Сохранить изменения');
+define(NETANGELSS3_SAVE_LOADING, 'Сохраняю изменения...');
 
 define(NETANGELSS3_SHOW_MOVE_LINK_IN_MENU, false);
 
@@ -34,9 +38,9 @@ define(NETANGELSS3_ERRORS_BAD_KEYS, 'Неправильно указаны кл�
 define(NETANGELSS3_MESSAGES_SAVED, 'Сохранено');
 define(NETANGELSS3_MESSAGES_CREATE_BUCKET, 'Корзины не существует. Создаем');
 
-define(NETANGELSS3_MESSAGES_BEFORE_DOWNLOADING_FROM_S3, 'Ранее загруженный из Netangels S3');
-define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD, 'Пока нет файлов для загрузки в Netangels S3');
-define(NETANGELSS3_MESSAGES_NO_FILES_IN_CLOUD, 'Пока нет файлов в Netangels S3');
+define(NETANGELSS3_MESSAGES_BEFORE_DOWNLOADING_FROM_S3, 'Ранее загруженный из NetAngels S3');
+define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD, 'Пока нет файлов для загрузки в NetAngels S3');
+define(NETANGELSS3_MESSAGES_NO_FILES_IN_CLOUD, 'Пока нет файлов в NetAngels S3');
 
 /* OPtion page */
 define(NETANGELSS3_MESSAGES_KEY_ID, 'Key ID');
@@ -67,10 +71,19 @@ define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD, 'Загрузить из
 define(NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD, 'Удалять в облаке');
 
 
-define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD_DESCR,'Как только вы нажмете на кнопку "'.NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD.'" начнется процесс копирования из Облачного S3 хранилище NetAngels в хранилище вашего Wordpress. Если вы поставите галочку '.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD.' то файлы в облачном хранилище будут удаляться.');
-define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD_DESCR2,'Пожалуйста не закрывайте окно и оставайтесь на этой странице до завершения процесса');
-define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR,'Как только вы нажмете на кнопку "'.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_SEND_TO_CLOUD.' начнется процесс копирования ваших файлов из Wordpress в Облачное S3 хранилище NetAngels. Если вы поставите галочку '.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_LOCAL.' то после переноса локальные файлы будут удаляться');
-define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR2,'Пожалуйста не закрывайте окно и оставайтесь на этой странице до завершения процесса');
+define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD_DESCR,' Нажатие на кнопку
+"'.NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD.'" запустит процесс
+копирования файлов из Облачного S3 хранилища NetAngels в хранилище вашего
+WordPress. Опция '.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD.' указывает на то, удалять ли исходные файлы при копировании их в хранилище WordPress.');
+define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD_DESCR2,'Пожалуйста не
+закрывайте окно и не обновляйте страницу до завершения процесса копирования.');
+define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR,'Нажатие на кнопку
+"'.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_SEND_TO_CLOUD.' запустит
+процесс копирования файлов из WordPress в Облачное S3 хранилище
+NetAngels. Опция
+'.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_LOCAL.' указывает на то, удалять ли исходные файлы при копировании их в хранилище NetAngels.');
+define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR2,'Пожалуйста не
+закрывайте окно и не обновляйте страницу до завершения процесса копирования.');
 
 include('classes/S3.php');
 require('functions.php');
@@ -119,7 +132,7 @@ function netangelss3_pluginImageTabs($_default_tabs)
 /*** VIEW IN ADMIN AREA ***/
 function netangelss3_options_view()
 {
-    $s3 = netangelss3_create();
+
     $save = false;
     $errors = array();
     $messages = array();
@@ -129,11 +142,13 @@ function netangelss3_options_view()
         update_option('netangelss3_key_id', $_POST['key_id']);
         update_option('netangelss3_secret_key', $_POST['secret_key']);
         update_option('netangelss3_auto_enable', $enable);
+
         //----------------------------------------------------
         // Проверка коннект при сохранение
         if (trim($_POST['key_id']) == '') $errors[] = NETANGELSS3_ERRORS_EMPTY_KEY;
         if (trim($_POST['secret_key']) == '') $errors[] = NETANGELSS3_ERRORS_EMPTY_SECRET_KEY;
         if (count($errors) == 0) {
+            $s3 = netangelss3_create();
             $bucket = get_option('netangelss3_bucket');
             $list = $s3->listBuckets(true);
             if (!$list) {
@@ -150,6 +165,7 @@ function netangelss3_options_view()
                     }
                 }
                 if ($need_create) {
+
                     $res = $s3->putBucket($bucket, S3::ACL_PUBLIC_READ, "EU");
                     $messages[] = NETANGELSS3_MESSAGES_CREATE_BUCKET;
                 }
