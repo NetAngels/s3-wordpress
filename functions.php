@@ -32,10 +32,11 @@ function netangelss3_setuped()
 
 function netangelss3_connected()
 {
-    if (!s3_setuped()) {
-        return false;
+    $netangelss3_connection_status = get_option('netangelss3_connection_status');
+    if ($netangelss3_connection_status=='1') {
+        return true;
     }
-    return true;
+    return false;
 }
 
 function netangelss3_getDefaultBucket()

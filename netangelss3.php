@@ -373,6 +373,7 @@ function netangelss3_view_tab()
     $settings = apply_filters('media_view_settings', $settings, $post);
     $settings = apply_filters('media_view_settings', $settings, $post);
     $strings['settings'] = $settings;
+
     //------------------------------------------------------
     wp_enqueue_style('media');
     wp_localize_script('media-views', '_wpMediaViewsL10n', $strings);
@@ -390,14 +391,13 @@ function netangelss3_view_tab()
     wp_enqueue_style('imgareaselect');
     $GLOBALS['body_id'] = 'media-upload1';
     $body_id = 'media-upload1';
-
     iframe_header(__('NetAngels S3', 'netangelss3'));
 
     //Add the Media buttons
     media_upload_header();
 
 
-    if (!s3_connected()) {
+    if (!netangelss3_connected()) {
         print __('Плагин ещё не настроен');
         return false;
     }
