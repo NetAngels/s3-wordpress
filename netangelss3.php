@@ -85,6 +85,9 @@ NetAngels. Опция
 define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR2,'Пожалуйста не
 закрывайте окно и не обновляйте страницу до завершения процесса копирования.');
 
+define(NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM, 'Проблема с загрузкой файлов в хранилище NetAngels.');
+define(NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TEXT, 'Не удалось загрузить один или несколько файлов в хранилище NetAngels.');
+
 include('classes/S3.php');
 require('functions.php');
 
@@ -463,6 +466,12 @@ function netangelss3_uploadTask()
     if ($enable != '1') {
         return false;
     }
+    $netangelss3_connection_status = get_option('netangelss3_connection_status');
+    if ($netangelss3_connection_status == 0)
+    {
+        // Не подцелено
+        return false;
+    }
     $files = array();
     $upload_dir = wp_upload_dir();
     netangelss3_filelistGet(&$files, $upload_dir['basedir']);
@@ -473,6 +482,12 @@ function netangelss3_uploadTask()
         $name1 = strtr($files[$i], array($upload_dir['basedir'] => ''));
         $name2 = netangelss3_s3_name($name1);
         $r = netangelss3_sendToCloud($s3, $files[$i], $name2);
+        if (!$r)
+        {
+            $admin_email = get_option( 'admin_email' );
+            wp_mail($admin_email, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TEXT);
+            break;
+        }
         $from2 = $upload_dir['baseurl'] . $name1;
         netangelss3_replace_in_post_and_pages($from2, $r);
         unlink($upload_dir['basedir'] . $name1);
