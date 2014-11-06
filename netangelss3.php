@@ -88,6 +88,8 @@ define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR2,'Пожалуйс�
 define(NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM, 'Проблема с загрузкой файлов в хранилище NetAngels.');
 define(NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TEXT, 'Не удалось загрузить один или несколько файлов в хранилище NetAngels.');
 
+define(NETANGELSS3_MESSAGES_CREATE_BUCKET_BIG_ERROR, 'Ошибка: Не удалось создать корзину. Возможная ппроблемы: проблемы с хранилищем NetAngels/проблемы с соединение с хранилищем. Обратитесь в тех поддержку. ');
+
 include('classes/S3.php');
 require('functions.php');
 
@@ -168,9 +170,22 @@ function netangelss3_options_view()
                     }
                 }
                 if ($need_create) {
-
-                    $res = $s3->putBucket($bucket, S3::ACL_PUBLIC_READ, "EU");
+				    
+					$cnt1 = 0;
+					$default_bucket = $bucket;
+					$res = $s3->putBucket($bucket, S3::ACL_PUBLIC_READ, "EU");
+					while (!$res)
+					{
+					
+					    $cnt1++;
+						$bucket = $default_bucket.'-'.$cnt1;
+						//print $bucket.'<br />';
+						$res = $s3->putBucket($bucket, S3::ACL_PUBLIC_READ, "EU");
+						if ($cnt1 > 10 )	die('NETANGELSS3_MESSAGES_CREATE_BUCKET_BIG_ERROR');
+					}
+					update_option('netangelss3_bucket', $bucket);
                     $messages[] = NETANGELSS3_MESSAGES_CREATE_BUCKET;
+					
                 }
             }
         }
@@ -216,7 +231,7 @@ function netangelss3_optionsFilesToS3()
     $enable = get_option('netangelss3_auto_enable');
     $files = array();
     $upload_dir = wp_upload_dir();
-    netangelss3_filelistGet(&$files, $upload_dir['basedir']);
+    netangelss3_filelistGet($files, $upload_dir['basedir']);
     // Security FIX - HIDE FULL PATH
     for ($i = 0; $i < count($files); $i++) {
         $files[$i] = strtr($files[$i], array($upload_dir['basedir'] => ''));
@@ -311,7 +326,7 @@ function netangelss3_try_send_to_cloud_auto()
     $s3 = netangelss3_create();
     $files = array();
     $upload_dir = wp_upload_dir();
-    netangelss3_filelistGet(&$files, $upload_dir['basedir']);
+    netangelss3_filelistGet($files, $upload_dir['basedir']);
     $count = count($files);
     if ($count > 10) $count = 10; // Загружаем 10 файлов за раз
     $s = '';
@@ -474,7 +489,7 @@ function netangelss3_uploadTask()
     }
     $files = array();
     $upload_dir = wp_upload_dir();
-    netangelss3_filelistGet(&$files, $upload_dir['basedir']);
+    netangelss3_filelistGet($files, $upload_dir['basedir']);
     $count = count($files);
     if ($count > NETANGELSS3_MAX_FILES_PER_TIME) $count = NETANGELSS3_MAX_FILES_PER_TIME;
     $s = '';

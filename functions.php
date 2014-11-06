@@ -49,7 +49,7 @@ function netangelss3_create()
     if (isset($GLOBALS['netangelss3_obj'])) return $GLOBALS['netangelss3_obj'];
     $key_id     = trim(get_option('netangelss3_key_id'));
     $secret_key = trim(get_option('netangelss3_secret_key'));
-    $bucket     = get_option('netangelss3_bucket');
+    $bucket     = get_option('netangelss3_bucket'); // прелоад =)
     $s3         = new S3($key_id, $secret_key);
     $GLOBALS['netangelss3_obj'] = $s3;
     return $s3;

@@ -1,4 +1,5 @@
 <link rel="stylesheet" id="netangelss3"  href="<?php echo plugins_url('netangelss3/css/style.css') . '?' . rand(1, 10000); ?>" type="text/css" media="all" />
+
 <div class="wrap">
     <h2><?php echo NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_FILES_FROM; ?></h2>
     <a href="plugins.php?page=netangelss3-options"><?php echo NETANGELSS3_BACK; ?></a><br/><br/>
@@ -8,25 +9,14 @@
     </span>
         <script>
             var canceled = false;
-            function setProcess(s) {
-                jQuery('#process').html(s);
-            }
-            function hideCancel()
-            {
-                jQuery('.submit').show();
-                jQuery('.cancel_area').hide();
-            }
-            function showCancel()
-            {
-                jQuery('.submit').hide();
-                jQuery('.cancel_area').show();
-            }
+
             function netangelss3_send_file(fl, callbk) {
                 var move = 0;
                 if (canceled)
                 {
                     setProcess('<?php echo NETANGELSS3_CANCELED; ?>');
                     jQuery('#the-list input.file:checked').removeAttr('disable');
+                    enableAllCheckBoxes();
                     return 0;
                 }
                 if (jQuery('#move_to_cloud').is(':checked')) move = 1;
@@ -58,32 +48,15 @@
                             setProcess('<?php echo NETANGELSS3_ENDED; ?>');
                             canceled=true;
                             hideCancel();
+                            enableAllCheckBoxes();
                             return 0;
                         }
                         netangelss3_send_checked_files_to_cloud();
                     }
                 );
             }
-
-            function netangelss3_send_checked_files_to_cloud() {
-                var file = jQuery('#the-list input.file:checked').val();
-                if (file === undefined) return false;
-                netangelss3_send_file(file);
-            }
-            jQuery(document).ready(function () {
-                jQuery('.send_to_cloud').click(function () {
-                    showCancel();
-                    canceled = false;
-                    jQuery('#the-list input.file:checked').attr('disable','disable');
-                    netangelss3_send_checked_files_to_cloud()
-                });
-                jQuery('.cancel').click(function () {
-                    canceled=true;
-                    hideCancel();
-                });
-            });
-
-        </script>
+         </script>
+        <script src="<?php echo plugins_url('netangelss3/js/functions.js'); ?>" type="text/javascript"></script>
         <p class="submit"><input type="submit" name="submit" id="submit" class="button button-primary send_to_cloud itsbold"
                                  value="<?php echo NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD; ?>">
             &nbsp; <?php echo NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD; ?> <input id="move_to_cloud"
