@@ -1,28 +1,45 @@
 /**
  * Created by SB on 06.11.14.
  */
-function disableAllCheckBoxes()
+//----------------------------------------------------------
+function debug(s)
 {
-  $('input[type=checkbox]').attr('disable','disable');
+    if (window.js_debug)
+    {
+        if (window.console)
+        {
+            console.log(s);
+        }
+    }
 }
-function enableAllCheckBoxes()
-{
-    $('input[type=checkbox]').removeAttr('disable');
+
+function disableAllCheckBoxes() {
+    jQuery('input[type=checkbox]').attr('disabled', 'disabled');
+}
+function enableAllCheckBoxes() {
+    jQuery('input[type=checkbox]').removeAttr('disabled');
 }
 function setProcess(s) {
     jQuery('#process').html(s);
 }
-function hideCancel()
-{
+function hideCancel() {
     jQuery('.submit').show();
     jQuery('.cancel_area').hide();
-    canceled = false;
 }
-function showCancel()
-{
+function showCancel() {
     jQuery('.submit').hide();
     jQuery('.cancel_area').show();
 }
+
+function onCanceled()
+{
+
+}
+function onEnded()
+{
+    
+}
+
 
 function netangelss3_send_checked_files_to_cloud() {
     var file = jQuery('#the-list input.file:checked').val()
@@ -33,15 +50,15 @@ function netangelss3_send_checked_files_to_cloud() {
 jQuery(document).ready(function () {
     jQuery('.send_to_cloud').click(function () {
         showCancel();
-        canceled = false;
+        window.canceled = false;
         disableAllCheckBoxes();
-        jQuery('#the-list input.file:checked').attr('disable','disable');
         netangelss3_send_checked_files_to_cloud()
     });
 
     jQuery('.cancel').click(function () {
-        canceled=true;
+        window.canceled = true;
         hideCancel();
         enableAllCheckBoxes();
     });
 });
+//----------------------------------------------------------

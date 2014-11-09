@@ -10,6 +10,7 @@ License: GPLv2
 */
 
 define(NETANGELSS3_DEBUG, false);
+define(NETANGELSS3_JS_DEBUG, false);
 define(NETANGELSS3_BACK, '&lt;&lt; Назад');
 define(NETANGELSS3_DOIT, 'Обрабатываю');
 define(NETANGELSS3_ENDED, 'Завершено');

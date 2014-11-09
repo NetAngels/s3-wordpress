@@ -1,5 +1,9 @@
+<?php if (NETANGELSS3_JS_DEBUG) { ?>
+<script>
+    window.js_debug=true;
+</script>
+<?php } ?>
 <link rel="stylesheet" id="netangelss3"  href="<?php echo plugins_url('netangelss3/css/style.css') . '?' . rand(1, 10000); ?>" type="text/css" media="all" />
-
 <div class="wrap">
     <h2><?php echo NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_FILES_FROM; ?></h2>
     <a href="plugins.php?page=netangelss3-options"><?php echo NETANGELSS3_BACK; ?></a><br/><br/>
@@ -8,14 +12,12 @@
         <?php echo NETANGELSS3_MESSAGES_MANUAL_TO_THIS_S3_FILES; ?>
     </span>
         <script>
-            var canceled = false;
-
+            window.canceled = false;
             function netangelss3_send_file(fl, callbk) {
                 var move = 0;
-                if (canceled)
+                if (window.canceled)
                 {
                     setProcess('<?php echo NETANGELSS3_CANCELED; ?>');
-                    jQuery('#the-list input.file:checked').removeAttr('disable');
                     enableAllCheckBoxes();
                     return 0;
                 }
@@ -46,7 +48,7 @@
                         });
                         if (jQuery('#the-list input.file:checked').length == 0) {
                             setProcess('<?php echo NETANGELSS3_ENDED; ?>');
-                            canceled=true;
+                            window.canceled=false;
                             hideCancel();
                             enableAllCheckBoxes();
                             return 0;
