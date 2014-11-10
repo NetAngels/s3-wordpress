@@ -526,7 +526,7 @@ function netangelss3_uploadTask()
             break;
         }
         $from2 = $upload_dir['baseurl'] . $name1;
-        netangelss3_replace_in_post_and_pages($from2, $r);
+        netangelss3_replace_in_post_and_pages($from2, $r['cloud_filename']);
         unlink($upload_dir['basedir'] . $name1);
         $s .= $files[$i] . '=>' . $name1 . '=>' . $name2 . "\r\n";
     }
