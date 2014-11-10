@@ -12,6 +12,7 @@ License: GPLv2
 define(NETANGELSS3_DEBUG, false);
 define(NETANGELSS3_JS_DEBUG, false);
 define(NETANGELSS3_BACK, '&lt;&lt; Назад');
+define(NETANGELSS3_HTML_NEWLINE, '<br />');
 define(NETANGELSS3_DOIT, 'Обрабатываю');
 define(NETANGELSS3_ENDED, 'Завершено');
 define(NETANGELSS3_SELALL, 'Выделить все');
@@ -91,6 +92,8 @@ define(NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TEXT, 'Не удалось за
 
 define(NETANGELSS3_MESSAGES_CREATE_BUCKET_BIG_ERROR, 'Ошибка: Не удалось создать корзину. Возможная ппроблемы: проблемы с хранилищем NetAngels/проблемы с соединение с хранилищем. Обратитесь в тех поддержку. ');
 
+define(NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TECH_INFO, 'Техническая информация:');
+define(NETANGELSS3_SEND_ERRORS_TEXT, 'Отправлять ошибки');
 include('classes/S3.php');
 require('functions.php');
 
@@ -106,6 +109,7 @@ function netangelss3_onInstall()
     add_option('netangelss3_bucket', $bucket, '', 'yes');
     add_option('netangelss3_auto_enable', '0', '', 'yes');
     add_option('netangelss3_connection_status', '0', '', 'yes');
+    add_option('netangelss3_senderrors', '0', '', 'yes');
 }
 
 function netangelss3_onUninstall()
@@ -115,6 +119,7 @@ function netangelss3_onUninstall()
     delete_option('netangelss3_bucket');
     delete_option('netangelss3_auto_enable');
     delete_option('netangelss3_connection_status');
+    delete_option('netangelss3_senderrors');
 }
 
 register_activation_hook(__FILE__, 'netangelss3_onInstall');
@@ -145,10 +150,11 @@ function netangelss3_options_view()
     if ($_POST) {
         $netangelss3_connection_status = 0;
         ($_POST['enable'] == 'on') ? ($enable = '1') : ($enable = '0');
+        ($_POST['send_errors'] == 'on') ? ($send_errors = '1') : ($send_errors = '0');
         update_option('netangelss3_key_id', $_POST['key_id']);
         update_option('netangelss3_secret_key', $_POST['secret_key']);
         update_option('netangelss3_auto_enable', $enable);
-
+        update_option('netangelss3_senderrors', $send_errors);
         //----------------------------------------------------
         // Проверка коннект при сохранение
         if (trim($_POST['key_id']) == '') $errors[] = NETANGELSS3_ERRORS_EMPTY_KEY;
@@ -201,6 +207,7 @@ function netangelss3_options_view()
     $key_id = get_option('netangelss3_key_id');
     $secret_key = get_option('netangelss3_secret_key');
     $enable = get_option('netangelss3_auto_enable');
+    $send_errors = get_option('netangelss3_senderrors');
     $netangelss3_connection_status = get_option('netangelss3_connection_status');
     include('template/options.php');
 }
@@ -262,7 +269,10 @@ function netangelss3_get_from_cloud()
     print $srcpath_url . " \r\n";
 
     netangelss3_getFromCloud($s3, $name, $destpath);
-
+    if (file_exists($destpath) && filesize($destpath) > 0)
+    {
+        die('ERR');
+    }
     netangelss3_replace_in_post_and_pages($srcpath_url, $destpath_url);
     //print 'netangelss3_replace_in_post_and_pages("' . $srcpath_url . '","' . $destpath_url . '");' . " \r\n";
     $attachment = array(
@@ -288,7 +298,7 @@ function netangelss3_sendFile()
     $upload_dir = wp_upload_dir();
     $name = netangelss3_s3_name($_REQUEST['file']);
     $r = netangelss3_sendToCloud($s3, $upload_dir['basedir'] . $_REQUEST['file'], $name);
-    if (!$r) die('ERROR');
+    if (!$r) die('ERR');
     if ($_REQUEST['move'] == '1') {
 
         $upload_dir = wp_upload_dir();
@@ -497,11 +507,22 @@ function netangelss3_uploadTask()
     for ($i = 0; $i <= $count; $i++) {
         $name1 = strtr($files[$i], array($upload_dir['basedir'] => ''));
         $name2 = netangelss3_s3_name($name1);
-        $r = netangelss3_sendToCloud($s3, $files[$i], $name2);
-        if (!$r)
+        $r = netangelss3_sendToCloudInSync($s3, $files[$i], $name2);
+        if (!$r['result'])
         {
+            $send_errors = get_option('netangelss3_senderrors');
+            if ($send_errors!='1')
+            {
+                break;
+            }
             $admin_email = get_option( 'admin_email' );
-            wp_mail($admin_email, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TEXT);
+            $headers = $r['rest']->response->headers;
+            $s = NETANGELSS3_HTML_NEWLINE;
+            foreach($headers as $k=>$v)
+            {
+                $s .=$k.':'.$v.NETANGELSS3_HTML_NEWLINE;
+            }
+            wp_mail($admin_email, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TEXT.NETANGELSS3_HTML_NEWLINE.NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TECH_INFO.$s);
             break;
         }
         $from2 = $upload_dir['baseurl'] . $name1;

@@ -63,12 +63,6 @@ function netangelss3_replace_in_post_and_pages($from, $to)
 
 function netangelss3_sendToCloud($s3inc, $uploadFile, $objname = '')
 {
-    /*
-    var_dump($s3inc);
-    print $uploadFile.'|';
-    print $objname.'|';
-    print '['.netangelss3_getDefaultBucket().']';
-    */
     if (!$s3inc) {
         return false;
     }
@@ -80,6 +74,29 @@ function netangelss3_sendToCloud($s3inc, $uploadFile, $objname = '')
     }
     return netangelss3_urlGetFullUrl($objname);
 }
+
+function netangelss3_sendToCloudInSync($s3inc, $uploadFile, $objname = '')
+{
+    if (!$s3inc) {
+        return false;
+    }
+    if ($objname == '') {
+        $objname = basename($uploadFile);
+    }
+    $arr = $s3inc->putObjectAndReturnRest($uploadFile, netangelss3_getDefaultBucket(), $objname, S3::ACL_PUBLIC_READ));
+    $cloud_filename = ''
+    if ($arr['result'] ) {
+        $cloud_filename = netangelss3_urlGetFullUrl($objname);
+    }
+    return array(
+                 'cloud_filename' => $cloud_filename,
+                 'rest'           => $arr['rest'],
+                 'result'         => $arr['result']
+                );
+}
+
+
+
 
 function netangelss3_deleteInCloud($s3inc, $name)
 {

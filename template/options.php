@@ -85,7 +85,16 @@
 	    </span>
                 </td>
             </tr>
-
+            <tr valign="top">
+                <th scope="row"><label for="enable"><?php echo NETANGELSS3_SEND_ERRORS_TEXT; ?>:</label></th>
+                <td>
+                    <input name="send_errors" type="checkbox" id="send_errors"
+                           <?php if ($send_errors == '1') { ?>checked="checked" <?php } ?>  class="regular-checkbox">
+	    <span class="description">
+	    <?php echo NETANGELSS3_SEND_ERRORS_TEXT; ?>
+	    </span>
+                </td>
+            </tr>
             </tbody>
         </table>
         <p class="submit">

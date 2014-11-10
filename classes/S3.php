@@ -679,6 +679,93 @@ class S3
     }
 
 
+
+    /**
+     * Put an object
+     *
+     * @param mixed $input Input data
+     * @param string $bucket Bucket name
+     * @param string $uri Object URI
+     * @param constant $acl ACL constant
+     * @param array $metaHeaders Array of x-amz-meta-* headers
+     * @param array $requestHeaders Array of request headers or content type as a string
+     * @param constant $storageClass Storage class constant
+     * @param constant $serverSideEncryption Server-side encryption
+     * @return array - object where result - is result on operation and rest - s3 obj 
+     */
+    public static function putObjectAndReturnRest($input, $bucket, $uri, $acl = self::ACL_PRIVATE, $metaHeaders = array(), $requestHeaders = array(), $storageClass = self::STORAGE_CLASS_STANDARD, $serverSideEncryption = self::SSE_NONE)
+    {
+        if ($input === false) return false;
+        $rest = new S3Request('PUT', $bucket, $uri, self::$endpoint);
+
+        if (!is_array($input)) $input = array(
+            'data' => $input, 'size' => strlen($input),
+            'md5sum' => base64_encode(md5($input, true))
+        );
+
+        // Data
+        if (isset($input['fp']))
+            $rest->fp =& $input['fp'];
+        elseif (isset($input['file']))
+            $rest->fp = @fopen($input['file'], 'rb');
+        elseif (isset($input['data']))
+            $rest->data = $input['data'];
+
+        // Content-Length (required)
+        if (isset($input['size']) && $input['size'] >= 0)
+            $rest->size = $input['size'];
+        else {
+            if (isset($input['file']))
+                $rest->size = filesize($input['file']);
+            elseif (isset($input['data']))
+                $rest->size = strlen($input['data']);
+        }
+
+        // Custom request headers (Content-Type, Content-Disposition, Content-Encoding)
+        if (is_array($requestHeaders))
+            foreach ($requestHeaders as $h => $v) $rest->setHeader($h, $v);
+        elseif (is_string($requestHeaders)) // Support for legacy contentType parameter
+            $input['type'] = $requestHeaders;
+
+        // Content-Type
+        if (!isset($input['type'])) {
+            if (isset($requestHeaders['Content-Type']))
+                $input['type'] =& $requestHeaders['Content-Type'];
+            elseif (isset($input['file']))
+                $input['type'] = self::__getMIMEType($input['file']);
+            else
+                $input['type'] = 'application/octet-stream';
+        }
+
+        if ($storageClass !== self::STORAGE_CLASS_STANDARD) // Storage class
+            $rest->setAmzHeader('x-amz-storage-class', $storageClass);
+
+        if ($serverSideEncryption !== self::SSE_NONE) // Server-side encryption
+            $rest->setAmzHeader('x-amz-server-side-encryption', $serverSideEncryption);
+
+        // We need to post with Content-Length and Content-Type, MD5 is optional
+        if ($rest->size >= 0 && ($rest->fp !== false || $rest->data !== false)) {
+            $rest->setHeader('Content-Type', $input['type']);
+            if (isset($input['md5sum'])) $rest->setHeader('Content-MD5', $input['md5sum']);
+
+            $rest->setAmzHeader('x-amz-acl', $acl);
+            foreach ($metaHeaders as $h => $v) $rest->setAmzHeader('x-amz-meta-' . $h, $v);
+            $rest->getResponse();
+        } else
+            $rest->response->error = array('code' => 0, 'message' => 'Missing input parameters');
+
+        if ($rest->response->error === false && $rest->response->code !== 200)
+            $rest->response->error = array('code' => $rest->response->code, 'message' => 'Unexpected HTTP status');
+        if ($rest->response->error !== false) {
+            self::__triggerError(sprintf("S3::putObject(): [%s] %s",
+                $rest->response->error['code'], $rest->response->error['message']), __FILE__, __LINE__);
+            return array('result'=>false, 'rest'=>$rest);
+        }
+        return array('result'=>true, 'rest'=>$rest);
+    }
+
+
+
     /**
      * Put an object from a file (legacy function)
      *
