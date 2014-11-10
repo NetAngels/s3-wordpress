@@ -83,9 +83,9 @@ function netangelss3_sendToCloudInSync($s3inc, $uploadFile, $objname = '')
     if ($objname == '') {
         $objname = basename($uploadFile);
     }
-    $arr = $s3inc->putObjectAndReturnRest($uploadFile, netangelss3_getDefaultBucket(), $objname, S3::ACL_PUBLIC_READ));
-    $cloud_filename = ''
-    if ($arr['result'] ) {
+    $arr = $s3inc->putObjectAndReturnRest($uploadFile, netangelss3_getDefaultBucket(), $objname, S3::ACL_PUBLIC_READ);
+    $cloud_filename = '';
+    if ($arr['result']) {
         $cloud_filename = netangelss3_urlGetFullUrl($objname);
     }
     return array(
