@@ -522,6 +522,8 @@ function netangelss3_uploadTask()
             {
                 $s .=$k.':'.$v.NETANGELSS3_HTML_NEWLINE;
             }
+            $s .= 'Body:'.$r['rest']->response->body.NETANGELSS3_HTML_NEWLINE;
+            $s .= 'Code:'.$r['rest']->response->code.NETANGELSS3_HTML_NEWLINE;
             wp_mail($admin_email, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TEXT.NETANGELSS3_HTML_NEWLINE.NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TECH_INFO.$s);
             break;
         }
