@@ -520,7 +520,7 @@ function netangelss3_uploadTask()
         wp_mail($admin_email, 'WPCRON_DEBUG_START', 's1' . $s1);
     }
     $count = count($files);
-    if ($count) {
+    if ($count == 0) {
         if (NETANGELSS3_WPCRON_DEBUG) {
             wp_mail($admin_email, 'WPCRON_DEBUG', 'ZERO_COUNT');
             return false;
