@@ -14,6 +14,9 @@ function  netangelss3_filelistGet(&$filelst, $path)
             netangelss3_filelistGet($filelst, $fullpath);
             continue;
         }
+        if (!is_file($fullpath)) {
+            continue;
+        }
         $filelst[] = $fullpath;
     }
     closedir($dh);
@@ -33,7 +36,7 @@ function netangelss3_setuped()
 function netangelss3_connected()
 {
     $netangelss3_connection_status = get_option('netangelss3_connection_status');
-    if ($netangelss3_connection_status=='1') {
+    if ($netangelss3_connection_status == '1') {
         return true;
     }
     return false;
@@ -47,10 +50,10 @@ function netangelss3_getDefaultBucket()
 function netangelss3_create()
 {
     if (isset($GLOBALS['netangelss3_obj'])) return $GLOBALS['netangelss3_obj'];
-    $key_id     = trim(get_option('netangelss3_key_id'));
+    $key_id = trim(get_option('netangelss3_key_id'));
     $secret_key = trim(get_option('netangelss3_secret_key'));
-    $bucket     = get_option('netangelss3_bucket'); // прелоад =)
-    $s3         = new S3($key_id, $secret_key);
+    $bucket = get_option('netangelss3_bucket'); // прелоад =)
+    $s3 = new S3($key_id, $secret_key);
     $GLOBALS['netangelss3_obj'] = $s3;
     return $s3;
 }
@@ -89,13 +92,11 @@ function netangelss3_sendToCloudInSync($s3inc, $uploadFile, $objname = '')
         $cloud_filename = netangelss3_urlGetFullUrl($objname);
     }
     return array(
-                 'cloud_filename' => $cloud_filename,
-                 'rest'           => $arr['rest'],
-                 'result'         => $arr['result']
-                );
+        'cloud_filename' => $cloud_filename,
+        'rest' => $arr['rest'],
+        'result' => $arr['result']
+    );
 }
-
-
 
 
 function netangelss3_deleteInCloud($s3inc, $name)
@@ -132,7 +133,7 @@ function netangelss3_s3_name($name)
 function netangelss3_urlGetFullUrl($name)
 {
     $bucket = netangelss3_getDefaultBucket();
-    $url = 'http://' . $bucket . '.'.NETANGELSS3_ENDPOINT.'/' . $name;
+    $url = 'http://' . $bucket . '.' . NETANGELSS3_ENDPOINT . '/' . $name;
     return $url;
 }
 
@@ -180,15 +181,14 @@ function netangelss3_fine_size($bytes)
 function netangelss3_filesize($fl)
 {
     $upload_dir = wp_upload_dir();
-    return filesize($upload_dir['basedir'].$fl);
+    return filesize($upload_dir['basedir'] . $fl);
 }
 
 function netangelss3_fileDesc($file)
 {
     $upload_dir = wp_upload_dir();
-    $full_file = $upload_dir['basedir'].$file;
-    if (strpos($file,'/from_netangels_s3/') !== false)
-    {
+    $full_file = $upload_dir['basedir'] . $file;
+    if (strpos($file, '/from_netangels_s3/') !== false) {
         return NETANGELSS3_MESSAGES_BEFORE_DOWNLOADING_FROM_S3;
     }
 }

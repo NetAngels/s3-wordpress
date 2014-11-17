@@ -6,13 +6,14 @@ Description: NetAngels S3 plugin
 Version: 0.0.1
 Author:YK
 Author URI: ural.im
-License: GPLv2
+License: GPL
 */
 
 define(NETANGELSS3_DEBUG, false);
 define(NETANGELSS3_JS_DEBUG, false);
+define(NETANGELSS3_WPCRON_DEBUG, true);
 define(NETANGELSS3_BACK, '&lt;&lt; Назад');
-define(NETANGELSS3_HTML_NEWLINE, '<br />');
+define(NETANGELSS3_HTML_NEWLINE, "\r\n");
 define(NETANGELSS3_DOIT, 'Обрабатываю');
 define(NETANGELSS3_ENDED, 'Завершено');
 define(NETANGELSS3_SELALL, 'Выделить все');
@@ -20,15 +21,16 @@ define(NETANGELSS3_SEL, 'Выбрать');
 define(NETANGELSS3_FILE, 'файл');
 define(NETANGELSS3_SIZE, 'размер');
 define(NETANGELSS3_DESCR, 'описание');
-define(NETANGELSS3_CANCEL,'Отмена');
-define(NETANGELSS3_CANCELED_PROCESS,'Отменяю');
-define(NETANGELSS3_CANCELED,'Отменено');
+define(NETANGELSS3_CANCEL, 'Отмена');
+define(NETANGELSS3_CANCELED_PROCESS, 'Отменяю');
+define(NETANGELSS3_CANCELED, 'Отменено');
 define(NETANGELSS3_SAVE, 'Сохранить изменения');
 define(NETANGELSS3_SAVE_LOADING, 'Сохраняю изменения...');
 
 define(NETANGELSS3_SHOW_MOVE_LINK_IN_MENU, false);
 
 define(NETANGELSS3_MAX_FILES_PER_TIME, 10);
+define(NETANGELSS3_MAX_SIZE_PER_TIME, 2097152);
 define(NETANGELSS3_FROM_CLOUD_CHMOD_DIR, 0777);
 define(NETANGELSS3_FROM_CLOUD_CHMOD, 0777);
 define(NETANGELSS3_ENDPOINT, 's3.netangels.ru');
@@ -73,18 +75,18 @@ define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD, 'Загрузить из
 define(NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD, 'Удалять в облаке');
 
 
-define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD_DESCR,' Нажатие на кнопку
-"'.NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD.'" запустит процесс
+define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD_DESCR, ' Нажатие на кнопку
+"' . NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD . '" запустит процесс
 копирования файлов из Облачного S3 хранилища NetAngels в хранилище вашего
-WordPress. Опция '.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD.' указывает на то, удалять ли исходные файлы при копировании их в хранилище WordPress.');
-define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD_DESCR2,'Пожалуйста не
+WordPress. Опция ' . NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD . ' указывает на то, удалять ли исходные файлы при копировании их в хранилище WordPress.');
+define(NETANGELSS3_MESSAGES_NO_FILES_TO_UPLOAD_TO_CLOUD_DESCR2, 'Пожалуйста не
 закрывайте окно и не обновляйте страницу до завершения процесса копирования.');
-define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR,'Нажатие на кнопку
-"'.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_SEND_TO_CLOUD.' запустит
+define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR, 'Нажатие на кнопку
+"' . NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_SEND_TO_CLOUD . ' запустит
 процесс копирования файлов из WordPress в Облачное S3 хранилище
 NetAngels. Опция
-'.NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_LOCAL.' указывает на то, удалять ли исходные файлы при копировании их в хранилище NetAngels.');
-define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR2,'Пожалуйста не
+' . NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_LOCAL . ' указывает на то, удалять ли исходные файлы при копировании их в хранилище NetAngels.');
+define(NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD_DESCR2, 'Пожалуйста не
 закрывайте окно и не обновляйте страницу до завершения процесса копирования.');
 
 define(NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM, 'Проблема с загрузкой файлов в хранилище NetAngels.');
@@ -94,6 +96,7 @@ define(NETANGELSS3_MESSAGES_CREATE_BUCKET_BIG_ERROR, 'Ошибка: Не уда�
 
 define(NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TECH_INFO, 'Техническая информация:');
 define(NETANGELSS3_SEND_ERRORS_TEXT, 'Отправлять ошибки');
+define(NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TECH_INFO_FILE, 'Файл:');
 include('classes/S3.php');
 require('functions.php');
 
@@ -177,22 +180,21 @@ function netangelss3_options_view()
                     }
                 }
                 if ($need_create) {
-				    
-					$cnt1 = 0;
-					$default_bucket = $bucket;
-					$res = $s3->putBucket($bucket, S3::ACL_PUBLIC_READ, "EU");
-					while (!$res)
-					{
-					
-					    $cnt1++;
-						$bucket = $default_bucket.'-'.$cnt1;
-						//print $bucket.'<br />';
-						$res = $s3->putBucket($bucket, S3::ACL_PUBLIC_READ, "EU");
-						if ($cnt1 > 10 )	die('NETANGELSS3_MESSAGES_CREATE_BUCKET_BIG_ERROR');
-					}
-					update_option('netangelss3_bucket', $bucket);
+
+                    $cnt1 = 0;
+                    $default_bucket = $bucket;
+                    $res = $s3->putBucket($bucket, S3::ACL_PUBLIC_READ, "EU");
+                    while (!$res) {
+
+                        $cnt1++;
+                        $bucket = $default_bucket . '-' . $cnt1;
+                        //print $bucket.'<br />';
+                        $res = $s3->putBucket($bucket, S3::ACL_PUBLIC_READ, "EU");
+                        if ($cnt1 > 10) die('NETANGELSS3_MESSAGES_CREATE_BUCKET_BIG_ERROR');
+                    }
+                    update_option('netangelss3_bucket', $bucket);
                     $messages[] = NETANGELSS3_MESSAGES_CREATE_BUCKET;
-					
+
                 }
             }
         }
@@ -269,8 +271,7 @@ function netangelss3_get_from_cloud()
     print $srcpath_url . " \r\n";
 
     netangelss3_getFromCloud($s3, $name, $destpath);
-    if (file_exists($destpath) && filesize($destpath) > 0)
-    {
+    if (file_exists($destpath) && filesize($destpath) > 0) {
         die('ERR');
     }
     netangelss3_replace_in_post_and_pages($srcpath_url, $destpath_url);
@@ -399,8 +400,8 @@ function netangelss3_view_tab()
         ),
     );
 
-    $settings = apply_filters('media_view_settings', $settings, $post);
-    $settings = apply_filters('media_view_settings', $settings, $post);
+    $settings = apply_filters('media_view_settings', $settings);
+    $settings = apply_filters('media_view_settings', $settings);
     $strings['settings'] = $settings;
 
     //------------------------------------------------------
@@ -486,53 +487,84 @@ add_action('netangelss3_upload_hook', 'netangelss3_uploadTask');
 
 function netangelss3_uploadTask()
 {
+    $wp_debug_it = true;
+    $admin_email = get_option('admin_email');
+    if (NETANGELSS3_WPCRON_DEBUG) {
+        wp_mail($admin_email, 'WPCRON_DEBUG_START', '1');
+    }
     $s3 = netangelss3_create();
     $s = '';
     $enable = get_option('netangelss3_auto_enable');
     if ($enable != '1') {
+        if (NETANGELSS3_WPCRON_DEBUG) {
+            wp_mail($admin_email, 'WPCRON_DEBUG_START', 'NOT_ENABLE');
+        }
         return false;
     }
     $netangelss3_connection_status = get_option('netangelss3_connection_status');
-    if ($netangelss3_connection_status == 0)
-    {
+    if ($netangelss3_connection_status == 0) {
+        if (NETANGELSS3_WPCRON_DEBUG) {
+            wp_mail($admin_email, 'WPCRON_DEBUG_START', 'NOT_CONNECTED');
+        }
         // Не подцелено
         return false;
     }
     $files = array();
     $upload_dir = wp_upload_dir();
     netangelss3_filelistGet($files, $upload_dir['basedir']);
+    if (NETANGELSS3_WPCRON_DEBUG) {
+        $s1 = '';
+        foreach ($files as $f) {
+            $s1 .= $f . "\r\n";
+        }
+        wp_mail($admin_email, 'WPCRON_DEBUG_START', 's1' . $s1);
+    }
     $count = count($files);
+    if ($count) {
+        if (NETANGELSS3_WPCRON_DEBUG) {
+            wp_mail($admin_email, 'WPCRON_DEBUG', 'ZERO_COUNT');
+            return false;
+        }
+    }
     if ($count > NETANGELSS3_MAX_FILES_PER_TIME) $count = NETANGELSS3_MAX_FILES_PER_TIME;
     $s = '';
+    $all_transfer_size = 0;
+
+    if (NETANGELSS3_WPCRON_DEBUG) {
+        wp_mail($admin_email, 'WPCRON_DEBUG_START', '');
+    }
     for ($i = 0; $i <= $count; $i++) {
+        $file_size = filesize($files[$i]);
         $name1 = strtr($files[$i], array($upload_dir['basedir'] => ''));
         $name2 = netangelss3_s3_name($name1);
-        $r = netangelss3_sendToCloudInSync($s3, $files[$i], $name2);
-        if (!$r['result'])
-        {
+        if ($all_transfer_size > NETANGELSS3_MAX_SIZE_PER_TIME) {
+            if (NETANGELSS3_WPCRON_DEBUG) {
+                wp_mail($admin_email, 'WPCRON_DEBUG_OVERSIZE', $s);
+            }
+            break;
+        }
+        $r = netangelss3_sendToCloud($s3, $files[$i], $name2);
+        if (NETANGELSS3_WPCRON_DEBUG) {
+            $s .= $files[$i] . '=>' . $name1 . '=>' . $name2 . ' SIZE:' . $file_size . '/' . $all_transfer_size . '/' . NETANGELSS3_MAX_SIZE_PER_TIME . "\r\n";
+        }
+
+        if (!$r) {
+            if (NETANGELSS3_WPCRON_DEBUG) {
+                wp_mail($admin_email, 'WPCRON_DEBUG_ERROR', 'Cant upload file:' . $files[$i] . NETANGELSS3_HTML_NEWLINE . NETANGELSS3_HTML_NEWLINE . $s);
+            }
             $send_errors = get_option('netangelss3_senderrors');
-            if ($send_errors!='1')
-            {
+            if ($send_errors != '1') {
                 break;
             }
-            $admin_email = get_option( 'admin_email' );
-            $headers = $r['rest']->response->headers;
-            $s = NETANGELSS3_HTML_NEWLINE;
-            foreach($headers as $k=>$v)
-            {
-                $s .=$k.':'.$v.NETANGELSS3_HTML_NEWLINE;
-            }
-            $s .= 'Body:'.$r['rest']->response->body.NETANGELSS3_HTML_NEWLINE;
-            $s .= 'Code:'.$r['rest']->response->code.NETANGELSS3_HTML_NEWLINE;
-            wp_mail($admin_email, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TEXT.NETANGELSS3_HTML_NEWLINE.NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TECH_INFO.$s);
+            wp_mail($admin_email, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM, NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TEXT . NETANGELSS3_HTML_NEWLINE . NETANGELSS3_MESSAGES_EMAIL_UPLOAD_PROBLEM_TECH_INFO_FILE . $files[$i]);
             break;
         }
         $from2 = $upload_dir['baseurl'] . $name1;
-        netangelss3_replace_in_post_and_pages($from2, $r['cloud_filename']);
+        netangelss3_replace_in_post_and_pages($from2, $r);
         unlink($upload_dir['basedir'] . $name1);
-        $s .= $files[$i] . '=>' . $name1 . '=>' . $name2 . "\r\n";
-    }
-    if (NETANGELSS3_DEBUG) {
-        wp_mail('admin@dotsb.net.ru', 'Automatic email 5 ' . date('d.m-Y H:i:s'), 'Automatic scheduled email from WordPress.' . $s);
+        if (NETANGELSS3_WPCRON_DEBUG) {
+            wp_mail($admin_email, 'WPCRON_DEBUG', $s);
+        }
+        $all_transfer_size = $all_transfer_size + $file_size; // чтобы хотя бы один файл за раз
     }
 }
