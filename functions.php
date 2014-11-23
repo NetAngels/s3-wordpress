@@ -173,7 +173,7 @@ function netangelss3_s3_namewithMd5($fullname,$name2)
     $path_parts['extension']
     $path_parts['filename']
     */
-    $name = $path_parts['dirname'].$path_parts['filename'].'-'.$md5OfFile.'.'.$path_parts['extension'];
+    $name = $path_parts['dirname'].DIRECTORY_SEPARATOR.$path_parts['filename'].'-'.$md5OfFile.'.'.$path_parts['extension'];
     return $name;
 }
 
