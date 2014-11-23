@@ -533,7 +533,7 @@ function netangelss3_uploadTask()
     if (NETANGELSS3_WPCRON_DEBUG) {
         wp_mail($admin_email, 'WPCRON_DEBUG_START', '');
     }
-    for ($i = 0; $i <= $count; $i++) {
+    for ($i = 0; $i < $count; $i++) {
         $file_size = filesize($files[$i]);
         $name1 = strtr($files[$i], array($upload_dir['basedir'] => ''));
         $name2 = netangelss3_s3_name($name1);
@@ -543,11 +543,16 @@ function netangelss3_uploadTask()
             }
             break;
         }
+        $exists = '0';
+        if (netangelss3_remoteFileExists($name2))
+        {
+          $exists = '1';
+          $name2 = netangelss3_s3_namewithMd5($files[$i],$name2);
+        }
         $r = netangelss3_sendToCloud($s3, $files[$i], $name2);
         if (NETANGELSS3_WPCRON_DEBUG) {
-            $s .= $files[$i] . '=>' . $name1 . '=>' . $name2 . ' SIZE:' . $file_size . '/' . $all_transfer_size . '/' . NETANGELSS3_MAX_SIZE_PER_TIME . "\r\n";
+            $s .= '['.$files[$i] . '=>' . $name1 . '=>' . $name2 .' exists:'.$exists . ' SIZE:' . $file_size . '/' . $all_transfer_size . '/' . NETANGELSS3_MAX_SIZE_PER_TIME .']'. "\r\n";
         }
-
         if (!$r) {
             if (NETANGELSS3_WPCRON_DEBUG) {
                 wp_mail($admin_email, 'WPCRON_DEBUG_ERROR', 'Cant upload file:' . $files[$i] . NETANGELSS3_HTML_NEWLINE . NETANGELSS3_HTML_NEWLINE . $s);

@@ -78,6 +78,41 @@ function netangelss3_sendToCloud($s3inc, $uploadFile, $objname = '')
     return netangelss3_urlGetFullUrl($objname);
 }
 
+function netangelss3_remoteFileExists($path)
+{
+    if ((strpos($path,'http://') === false) and (strpos($path,'https://') === false)) {
+        $path = netangelss3_urlGetFullUrl($path);
+    }
+    print $path;
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_URL, $path);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla 4.0');
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'HEAD'); // HTTP request is 'HEAD'
+    curl_setopt($ch, CURLOPT_NOBODY, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+
+    $content = curl_exec($ch);
+    if(!curl_errno($ch))
+    {
+
+    }
+    $result = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    print $result;
+    $ret_result = false;
+    if ($result == 200)
+    {
+        $ret_result = true;
+    }
+    curl_close($ch);
+    return $ret_result;
+}
+
+
+
 function netangelss3_sendToCloudInSync($s3inc, $uploadFile, $objname = '')
 {
     if (!$s3inc) {
@@ -129,6 +164,19 @@ function netangelss3_s3_name($name)
     $name = substr($name, 1);
     return $name;
 }
+
+function netangelss3_s3_namewithMd5($fullname,$name2)
+{
+    $path_parts = pathinfo($name2);
+    $md5OfFile = md5_file($fullname);
+    /*
+    $path_parts['extension']
+    $path_parts['filename']
+    */
+    $name = $path_parts['dirname'].$path_parts['filename'].'-'.$md5OfFile.'.'.$path_parts['extension'];
+    return $name;
+}
+
 
 function netangelss3_urlGetFullUrl($name)
 {
