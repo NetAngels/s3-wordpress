@@ -35,6 +35,9 @@ define(NETANGELSS3_FROM_CLOUD_CHMOD_DIR, 0777);
 define(NETANGELSS3_FROM_CLOUD_CHMOD, 0777);
 define(NETANGELSS3_ENDPOINT, 's3.netangels.ru');
 
+define(NETANGELSS3_FROM_ERROR, 'Произошла ошибка загрузки. Файл:');
+define(NETANGELSS3_TO_ERROR, 'Произошла ошибка выгрузки. Файл:');
+
 define(NETANGELSS3_ERRORS_EMPTY_KEY, 'Не указан key_id');
 define(NETANGELSS3_ERRORS_EMPTY_SECRET_KEY, 'Не указан secret_key');
 define(NETANGELSS3_ERRORS_BAD_KEYS, 'Неправильно указаны ключи.');
@@ -265,13 +268,25 @@ function netangelss3_get_from_cloud()
     $destpath_url = $upload_dir['baseurl'] . $simple_file_path;
     $srcpath_url = netangelss3_urlGetFullUrl($name);
     mkdir($path, NETANGELSS3_FROM_CLOUD_CHMOD_DIR, true);
+    if (file_exists($destpath))
+    {
+      $path_parts = pathinfo($destpath);
+      $md5OfFile = uniqid('');
+      $destpath = $path_parts['dirname'].DIRECTORY_SEPARATOR.$path_parts['filename'].'-'.$md5OfFile.'.'.$path_parts['extension'];
+    }
+    /*
     print $path . " \r\n";
     print $destpath . " \r\n";
     print $destpath_url . " \r\n";
     print $srcpath_url . " \r\n";
-
+    */
     netangelss3_getFromCloud($s3, $name, $destpath);
-    if (file_exists($destpath) && filesize($destpath) > 0) {
+
+    if (!file_exists($destpath)) {
+        die('ERR');
+    }
+
+    if (file_exists($destpath) and filesize($destpath) == 0) {
         die('ERR');
     }
     netangelss3_replace_in_post_and_pages($srcpath_url, $destpath_url);
@@ -285,9 +300,13 @@ function netangelss3_get_from_cloud()
     );
     $attach_id = wp_insert_attachment($attachment, $upload_dir['basedir'] . $simple_file_path);
     if ($_REQUEST['move'] == '1') {
-        netangelss3_deleteInCloud($s3, $name);
+        $rd = netangelss3_deleteInCloud($s3, $name);
+        if (!$rd)
+        {
+           die('ERR');
+        }
     }
-    die();
+    die('OK');
 }
 
 add_action('wp_ajax_netangelss3_get_from_cloud', 'netangelss3_get_from_cloud');
@@ -331,35 +350,7 @@ add_action('admin_menu', 'netangelss3_options_add_to_menu');
 
 
 /*** END VIEW ADMIN AREA ***/
-/*** WP_CRON ***/
 
-function netangelss3_try_send_to_cloud_auto()
-{
-    $s3 = netangelss3_create();
-    $files = array();
-    $upload_dir = wp_upload_dir();
-    netangelss3_filelistGet($files, $upload_dir['basedir']);
-    $count = count($files);
-    if ($count > 10) $count = 10; // Загружаем 10 файлов за раз
-    $s = '';
-    for ($i = 0; $i <= $count; $i) {
-        $name1 = strtr($files[$i], array($upload_dir['basedir'] => ''));
-        $name2 = netangelss3_s3_name($name1);
-        $r = netangelss3_sendToCloud($s3, $files[$i], $name2);
-        $s .= $files[$i] . '=>' . $r . "\r\n";
-        if (!$r) die('ERROR');
-        $from1 = $name1;
-        $from2 = $upload_dir['baseurl'] . $from1;
-        //netangelss3_replace_in_post_and_pages($from1,$r);
-        netangelss3_replace_in_post_and_pages($from2, $r);
-        unlink($upload_dir['basedir'] . $name1);
-
-    }
-    $admin_email = get_settings('admin_email');
-    wp_mail($admin_email, 'Автоматическое письмо', 'Запланированное письмо от WordPress.' . $s);
-}
-
-/*** END CRON ***/
 /*** Attach url filter ***/
 
 function remove_media_library_tab($tabs)

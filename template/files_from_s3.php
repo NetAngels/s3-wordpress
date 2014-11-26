@@ -31,7 +31,14 @@
                         'move': move
                     },
                     function (response) {
+                        if (response == 'ERR')
+                        {
+                	    setProcess('<?php echo NETANGELSS3_FROM_ERROR; ?> '+fl);
+                	    enableAllCheckBoxes();
+                	    return 0;
+                        }
                         //if callbk != nullcallbk(respons);
+
                         jQuery('#the-list input.file:checked').each(function (index, el) {
 
                             if (fl == jQuery(this).val()) {

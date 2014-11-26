@@ -83,7 +83,6 @@ function netangelss3_remoteFileExists($path)
     if ((strpos($path,'http://') === false) and (strpos($path,'https://') === false)) {
         $path = netangelss3_urlGetFullUrl($path);
     }
-    print $path;
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_URL, $path);
@@ -139,7 +138,6 @@ function netangelss3_deleteInCloud($s3inc, $name)
     if (!$s3inc) {
         return false;
     }
-    //$url = netangelss3_urlGetFullUrl($name);
     if (!$s3inc->deleteObject(netangelss3_getDefaultBucket(), $name)) {
         return false;
     }
@@ -169,10 +167,6 @@ function netangelss3_s3_namewithMd5($fullname,$name2)
 {
     $path_parts = pathinfo($name2);
     $md5OfFile = md5_file($fullname);
-    /*
-    $path_parts['extension']
-    $path_parts['filename']
-    */
     $name = $path_parts['dirname'].DIRECTORY_SEPARATOR.$path_parts['filename'].'-'.$md5OfFile.'.'.$path_parts['extension'];
     return $name;
 }

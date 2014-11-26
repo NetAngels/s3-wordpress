@@ -38,6 +38,12 @@
                 },
                 function (response) {
                     //if callbk != nullcallbk(respons);
+                    if (response == 'ERR')
+                    {
+                            setProcess('<?php echo NETANGELSS3_TO_ERROR; ?> '+fl);
+                            enableAllCheckBoxes();
+                            return 0;
+                    }
                     jQuery('#the-list input.file:checked').each(function (index, element) {
                         if (fl == jQuery(this).val()) {
                             if (move == 1) {
