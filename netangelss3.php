@@ -317,7 +317,14 @@ function netangelss3_sendFile()
     $s3 = netangelss3_create();
     $upload_dir = wp_upload_dir();
     $name = netangelss3_s3_name($_REQUEST['file']);
-    $r = netangelss3_sendToCloud($s3, $upload_dir['basedir'] . $_REQUEST['file'], $name);
+    $filepath = $upload_dir['basedir'] . $_REQUEST['file'];
+    if (netangelss3_remoteFileExists($name2))
+    {
+          $exists = '1';
+          $name2 = netangelss3_s3_namewithODMd5($filepath ,$name);
+    }
+
+    $r = netangelss3_sendToCloud($s3, $filepath , $name);
     if (!$r) die('ERR');
     if ($_REQUEST['move'] == '1') {
 
