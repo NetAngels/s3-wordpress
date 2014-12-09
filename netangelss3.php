@@ -12,8 +12,14 @@ License: GPL
 define(NETANGELSS3_DEBUG, false);
 define(NETANGELSS3_JS_DEBUG, false);
 define(NETANGELSS3_WPCRON_DEBUG, true);
+
+define(NETANGELSS3_DOWNLOAD_SPECIAL_DIR, false);
+define(NETANGELSS3_DOWNLOAD_SPECIAL_DIR_NAME, 'from_netangels_s3');
+
 define(NETANGELSS3_BACK, '&lt;&lt; Назад');
 define(NETANGELSS3_HTML_NEWLINE, "\r\n");
+define(NETANGELSS3_FILE_HAS_UPLOADED, 'Файл загружен.');
+define(NETANGELSS3_PLUGIN_NOT_SETUPED, 'Плагин ещё не настроен');
 define(NETANGELSS3_DOIT, 'Обрабатываю');
 define(NETANGELSS3_ENDED, 'Завершено');
 define(NETANGELSS3_SELALL, 'Выделить все');
@@ -25,6 +31,7 @@ define(NETANGELSS3_CANCEL, 'Отмена');
 define(NETANGELSS3_CANCELED_PROCESS, 'Отменяю');
 define(NETANGELSS3_CANCELED, 'Отменено');
 define(NETANGELSS3_SAVE, 'Сохранить изменения');
+define(NETANGELSS3_SAVE1,'Сохранить');
 define(NETANGELSS3_SAVE_LOADING, 'Сохраняю изменения...');
 
 define(NETANGELSS3_SHOW_MOVE_LINK_IN_MENU, false);
@@ -261,18 +268,21 @@ function netangelss3_get_from_cloud()
     $name = $_REQUEST['file'];
     $basename = basename($_REQUEST['file']);
     $path = strtr($name, array($basename => ''));
-    $simple_path = '/from_netangels_s3/' . $path;
-    $simple_file_path = '/from_netangels_s3/' . $path . $basename;
+    $simple_path = '/' . $path;
+    $simple_file_path = '/' . $path . $basename;
+    if (NETANGELSS3_DOWNLOAD_SPECIAL_DIR) {
+        $simple_path = '/' . NETANGELSS3_DOWNLOAD_SPECIAL_DIR_NAME . '/' . $path;
+        $simple_file_path = '/' . NETANGELSS3_DOWNLOAD_SPECIAL_DIR_NAME . '/' . $path . $basename;
+    }
     $path = $upload_dir['basedir'] . $simple_path;
     $destpath = $upload_dir['basedir'] . $simple_file_path;
     $destpath_url = $upload_dir['baseurl'] . $simple_file_path;
     $srcpath_url = netangelss3_urlGetFullUrl($name);
     mkdir($path, NETANGELSS3_FROM_CLOUD_CHMOD_DIR, true);
-    if (file_exists($destpath))
-    {
-      $path_parts = pathinfo($destpath);
-      $md5OfFile = uniqid('');
-      $destpath = $path_parts['dirname'].DIRECTORY_SEPARATOR.$path_parts['filename'].'-'.$md5OfFile.'.'.$path_parts['extension'];
+    if (file_exists($destpath)) {
+        $path_parts = pathinfo($destpath);
+        $md5OfFile = uniqid('');
+        $destpath = $path_parts['dirname'] . DIRECTORY_SEPARATOR . $path_parts['filename'] . '-' . $md5OfFile . '.' . $path_parts['extension'];
     }
     /*
     print $path . " \r\n";
@@ -301,9 +311,8 @@ function netangelss3_get_from_cloud()
     $attach_id = wp_insert_attachment($attachment, $upload_dir['basedir'] . $simple_file_path);
     if ($_REQUEST['move'] == '1') {
         $rd = netangelss3_deleteInCloud($s3, $name);
-        if (!$rd)
-        {
-           die('ERR');
+        if (!$rd) {
+            die('ERR');
         }
     }
     die('OK');
@@ -318,13 +327,12 @@ function netangelss3_sendFile()
     $upload_dir = wp_upload_dir();
     $name = netangelss3_s3_name($_REQUEST['file']);
     $filepath = $upload_dir['basedir'] . $_REQUEST['file'];
-    if (netangelss3_remoteFileExists($name2))
-    {
-          $exists = '1';
-          $name2 = netangelss3_s3_namewithMd5($filepath ,$name);
+    if (netangelss3_remoteFileExists($name)) {
+        $exists = '1';
+        $name2 = netangelss3_s3_namewithMd5($filepath, $name);
     }
 
-    $r = netangelss3_sendToCloud($s3, $filepath , $name);
+    $r = netangelss3_sendToCloud($s3, $filepath, $name);
     if (!$r) die('ERR');
     if ($_REQUEST['move'] == '1') {
 
@@ -333,6 +341,7 @@ function netangelss3_sendFile()
         $from2 = $upload_dir['baseurl'] . $from1;
         netangelss3_replace_in_post_and_pages($from2, $r);
         //netangelss3_replace_in_post_and_pages($from1,$r);
+        netangelss3_removeAttach($_REQUEST['file']);
         unlink($upload_dir['basedir'] . $_REQUEST['file']);
     }
     print $r . ' ' . $upload_dir['basedir'] . $_REQUEST['file'] . ' ' . $name . ' ' . $r;
@@ -374,7 +383,7 @@ function netangelss3_upload_form_html()
     $s = '';
     $s .= '<form  enctype="multipart/form-data" method="post">';
     $s .= '<input type="file" name="file">';
-    $s .= '<input type="submit" value="Сохранить">';
+    $s .= '<input type="submit" value="'.NETANGELSS3_SAVE1.'">';
     $s .= '</form>';
     return $s;
 }
@@ -426,13 +435,13 @@ function netangelss3_view_tab()
 
 
     if (!netangelss3_connected()) {
-        print __('Плагин ещё не настроен');
+        print __(NETANGELSS3_PLUGIN_NOT_SETUPED);
         return false;
     }
     if ($_FILES) {
         $r = netangelss3_sendToCloud($s3, $_FILES['file']['tmp_name'], basename($_FILES['file']['name']));
         if ($r) {
-            print '<div id="message2" class="updated below-h2"><p>Файл загружен.</p></div>';
+            print '<div id="message2" class="updated below-h2"><p>' . NETANGELSS3_FILE_HAS_UPLOADED . '</p></div>';
         }
     }
     add_thickbox();
@@ -542,14 +551,13 @@ function netangelss3_uploadTask()
             break;
         }
         $exists = '0';
-        if (netangelss3_remoteFileExists($name2))
-        {
-          $exists = '1';
-          $name2 = netangelss3_s3_namewithMd5($files[$i],$name2);
+        if (netangelss3_remoteFileExists($name2)) {
+            $exists = '1';
+            $name2 = netangelss3_s3_namewithMd5($files[$i], $name2);
         }
         $r = netangelss3_sendToCloud($s3, $files[$i], $name2);
         if (NETANGELSS3_WPCRON_DEBUG) {
-            $s .= '['.$files[$i] . '=>' . $name1 . '=>' . $name2 .' exists:'.$exists . ' SIZE:' . $file_size . '/' . $all_transfer_size . '/' . NETANGELSS3_MAX_SIZE_PER_TIME .']'. "\r\n";
+            $s .= '[' . $files[$i] . '=>' . $name1 . '=>' . $name2 . ' exists:' . $exists . ' SIZE:' . $file_size . '/' . $all_transfer_size . '/' . NETANGELSS3_MAX_SIZE_PER_TIME . ']' . "\r\n";
         }
         if (!$r) {
             if (NETANGELSS3_WPCRON_DEBUG) {
@@ -564,6 +572,7 @@ function netangelss3_uploadTask()
         }
         $from2 = $upload_dir['baseurl'] . $name1;
         netangelss3_replace_in_post_and_pages($from2, $r);
+        netangelss3_removeAttach($name1);
         unlink($upload_dir['basedir'] . $name1);
         if (NETANGELSS3_WPCRON_DEBUG) {
             wp_mail($admin_email, 'WPCRON_DEBUG', $s);

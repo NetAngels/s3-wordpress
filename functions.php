@@ -46,7 +46,6 @@ function netangelss3_getDefaultBucket()
 {
     return get_option('netangelss3_bucket', '');
 }
-
 function netangelss3_create()
 {
     if (isset($GLOBALS['netangelss3_obj'])) return $GLOBALS['netangelss3_obj'];
@@ -57,11 +56,40 @@ function netangelss3_create()
     $GLOBALS['netangelss3_obj'] = $s3;
     return $s3;
 }
+function netangelss3_removeAttach($file_path)
+{
+    global $wpdb;
+    $upload_dir = wp_upload_dir();
+    #$upload_dir['basedir'] 
+    $local_path_url=$upload_dir['baseurl'];
+    if (substr($local_path_url,strlen($local_path_url)-1,1) != '/')
+    {
+      $local_path_url +='/';
+    }
+    //$wpdb->query($wpdb->prepare('UPDATE wp_postmeta SET meta_value = REPLACE ( meta_value, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
+}
 
-function netangelss3_replace_in_post_and_pages($from, $to)
+
+
+function netangelss3_replace_in_post_and_pages($from, $to, $to_local = false)
 {
     global $wpdb;
     $wpdb->query($wpdb->prepare('UPDATE wp_posts SET post_content = REPLACE ( post_content, %s,  %s) WHERE post_content LIKE "%%%s%%"', $from, $to, $from));
+
+    $wpdb->query($wpdb->prepare('UPDATE wp_postmeta SET meta_value = REPLACE ( meta_value, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
+    
+    $wpdb->query($wpdb->prepare('UPDATE wp_posts SET guid = REPLACE ( guid, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
+
+    /*
+    $upload_dir = wp_upload_dir();
+    $upload_dir['basedir'] 
+    $local_path_url=$upload_dir['baseurl'];
+    if (substr($local_path_url,len($local_path_url)-1,1) != '/')
+    {
+      $local_path_url +='/';
+    }
+    $wpdb->query($wpdb->prepare('UPDATE wp_postmeta SET meta_value = REPLACE ( meta_value, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
+    */
 }
 
 function netangelss3_sendToCloud($s3inc, $uploadFile, $objname = '')
@@ -95,9 +123,9 @@ function netangelss3_remoteFileExists($path)
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
     $content = curl_exec($ch);
-    if(!curl_errno($ch))
+    if(curl_errno($ch))
     {
-
+        //return false;
     }
     $result = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     print $result;
@@ -230,7 +258,7 @@ function netangelss3_fileDesc($file)
 {
     $upload_dir = wp_upload_dir();
     $full_file = $upload_dir['basedir'] . $file;
-    if (strpos($file, '/from_netangels_s3/') !== false) {
+    if (strpos($file, '/'.NETANGELSS3_DOWNLOAD_SPECIAL_DIR_NAME.'/') !== false) {
         return NETANGELSS3_MESSAGES_BEFORE_DOWNLOADING_FROM_S3;
     }
 }
