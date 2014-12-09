@@ -321,7 +321,7 @@ function netangelss3_sendFile()
     if (netangelss3_remoteFileExists($name2))
     {
           $exists = '1';
-          $name2 = netangelss3_s3_namewithODMd5($filepath ,$name);
+          $name2 = netangelss3_s3_namewithMd5($filepath ,$name);
     }
 
     $r = netangelss3_sendToCloud($s3, $filepath , $name);
