@@ -46,6 +46,7 @@ function netangelss3_getDefaultBucket()
 {
     return get_option('netangelss3_bucket', '');
 }
+
 function netangelss3_create()
 {
     if (isset($GLOBALS['netangelss3_obj'])) return $GLOBALS['netangelss3_obj'];
@@ -56,9 +57,11 @@ function netangelss3_create()
     $GLOBALS['netangelss3_obj'] = $s3;
     return $s3;
 }
+
 function netangelss3_removeAttach($file_path)
 {
     global $wpdb;
+    if (!NETANGELSS3_ATTH_REMOVE_ON_MOVE) return false;
     $upload_dir = wp_upload_dir();
     #$upload_dir['basedir'] 
     $local_path_url=$upload_dir['baseurl'];
@@ -69,6 +72,26 @@ function netangelss3_removeAttach($file_path)
     //$wpdb->query($wpdb->prepare('UPDATE wp_postmeta SET meta_value = REPLACE ( meta_value, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
 }
 
+function netangelss3_getAttachmentList()
+{
+    $thumbimgs = array();
+    $args = array( 'post_type' => 'attachment', 'numberposts' => -1, 'post_status' => null, 'post_parent' => null );
+    $attachments = get_posts( $args );
+    if ($attachments) {
+        foreach ( $attachments as $post ) {
+            if ( !is_array( $imagedata = wp_get_attachment_metadata( $post->ID,true ) ) ) continue;
+           //$url = str_replace(basename($url), basename($thumb), $url);
+            //post.php function wp_get_attachment_thumb_url( $post_id = 0 ) {
+            $thumbimgs[] =  array(
+                 'title'=>get_the_title($post->ID),
+                 'file'=>get_attached_file($post->ID),
+                 'meta'=>$imagedata,
+            );
+            //$thumbimgs[] = wp_get_attachment_link( $post->ID, 'thumbnail-size', true );
+        }
+    }
+    return $thumbimgs;
+}
 
 
 function netangelss3_replace_in_post_and_pages($from, $to, $to_local = false)
@@ -78,7 +101,7 @@ function netangelss3_replace_in_post_and_pages($from, $to, $to_local = false)
 
     $wpdb->query($wpdb->prepare('UPDATE wp_postmeta SET meta_value = REPLACE ( meta_value, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
     
-    $wpdb->query($wpdb->prepare('UPDATE wp_posts SET guid = REPLACE ( guid, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
+    //$wpdb->query($wpdb->prepare('UPDATE wp_posts SET guid = REPLACE ( guid, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
 
     /*
     $upload_dir = wp_upload_dir();
