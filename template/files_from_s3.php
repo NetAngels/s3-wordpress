@@ -37,10 +37,7 @@
                         enableAllCheckBoxes();
                         return 0;
                     }
-                    //if callbk != nullcallbk(respons);
-
                     jQuery('#the-list input.file:checked').each(function (index, el) {
-
                         if (fl == jQuery(this).val()) {
                             if (move == 1) {
                                 jQuery(this).parent().parent().remove();
@@ -118,7 +115,7 @@
                             if ($file['type'] == 'atth') {
                                 echo NETANGELSS3_FILE_S3_WP_FILE;
                             } elseif ($file['type'] == 'remote') {
-                                echo NETANGELSS3_FILE_WP_FILE ;
+                                echo NETANGELSS3_FILE_WP_FILE;
                             } else {
                                 echo '';
                             }

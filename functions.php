@@ -64,10 +64,9 @@ function netangelss3_removeAttach($file_path)
     if (!NETANGELSS3_ATTH_REMOVE_ON_MOVE) return false;
     $upload_dir = wp_upload_dir();
     #$upload_dir['basedir'] 
-    $local_path_url=$upload_dir['baseurl'];
-    if (substr($local_path_url,strlen($local_path_url)-1,1) != '/')
-    {
-      $local_path_url +='/';
+    $local_path_url = $upload_dir['baseurl'];
+    if (substr($local_path_url, strlen($local_path_url) - 1, 1) != '/') {
+        $local_path_url += '/';
     }
     //$wpdb->query($wpdb->prepare('UPDATE wp_postmeta SET meta_value = REPLACE ( meta_value, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
 }
@@ -75,17 +74,17 @@ function netangelss3_removeAttach($file_path)
 function netangelss3_getAttachmentList()
 {
     $thumbimgs = array();
-    $args = array( 'post_type' => 'attachment', 'numberposts' => -1, 'post_status' => null, 'post_parent' => null );
-    $attachments = get_posts( $args );
+    $args = array('post_type' => 'attachment', 'numberposts' => -1, 'post_status' => null, 'post_parent' => null);
+    $attachments = get_posts($args);
     if ($attachments) {
-        foreach ( $attachments as $post ) {
-            if ( !is_array( $imagedata = wp_get_attachment_metadata( $post->ID,true ) ) ) continue;
-           //$url = str_replace(basename($url), basename($thumb), $url);
+        foreach ($attachments as $post) {
+            if (!is_array($imagedata = wp_get_attachment_metadata($post->ID, true))) continue;
+            //$url = str_replace(basename($url), basename($thumb), $url);
             //post.php function wp_get_attachment_thumb_url( $post_id = 0 ) {
-            $thumbimgs[] =  array(
-                 'title'=>get_the_title($post->ID),
-                 'file'=>get_attached_file($post->ID),
-                 'meta'=>$imagedata,
+            $thumbimgs[] = array(
+                'title' => get_the_title($post->ID),
+                'file' => get_attached_file($post->ID),
+                'meta' => $imagedata,
             );
             //$thumbimgs[] = wp_get_attachment_link( $post->ID, 'thumbnail-size', true );
         }
@@ -97,10 +96,13 @@ function netangelss3_getAttachmentList()
 function netangelss3_replace_in_post_and_pages($from, $to, $to_local = false)
 {
     global $wpdb;
+    netangelss3_writelog('netangelss3_replace_in_post_and_pages from:' . $from);
+    netangelss3_writelog('netangelss3_replace_in_post_and_pages to:' . $to);
+    netangelss3_writelog('netangelss3_replace_in_post_and_pages $to_local:' . $to_local);
     $wpdb->query($wpdb->prepare('UPDATE wp_posts SET post_content = REPLACE ( post_content, %s,  %s) WHERE post_content LIKE "%%%s%%"', $from, $to, $from));
 
     $wpdb->query($wpdb->prepare('UPDATE wp_postmeta SET meta_value = REPLACE ( meta_value, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
-    
+
     //$wpdb->query($wpdb->prepare('UPDATE wp_posts SET guid = REPLACE ( guid, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
 
     /*
@@ -131,7 +133,7 @@ function netangelss3_sendToCloud($s3inc, $uploadFile, $objname = '')
 
 function netangelss3_remoteFileExists($path)
 {
-    if ((strpos($path,'http://') === false) and (strpos($path,'https://') === false)) {
+    if ((strpos($path, 'http://') === false) and (strpos($path, 'https://') === false)) {
         $path = netangelss3_urlGetFullUrl($path);
     }
     $ch = curl_init();
@@ -146,21 +148,18 @@ function netangelss3_remoteFileExists($path)
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
     $content = curl_exec($ch);
-    if(curl_errno($ch))
-    {
+    if (curl_errno($ch)) {
         //return false;
     }
     $result = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     print $result;
     $ret_result = false;
-    if ($result == 200)
-    {
+    if ($result == 200) {
         $ret_result = true;
     }
     curl_close($ch);
     return $ret_result;
 }
-
 
 
 function netangelss3_sendToCloudInSync($s3inc, $uploadFile, $objname = '')
@@ -197,7 +196,9 @@ function netangelss3_deleteInCloud($s3inc, $name)
 
 function netangelss3_getFromCloud($s3inc, $name, $destfile)
 {
+    netangelss3_writelog('netangelss3_getFromCloud name:' . $name);
     $url = netangelss3_urlGetFullUrl($name);
+    netangelss3_writelog('netangelss3_getFromCloud url:' . $url);
     $fp = fopen($destfile, 'w+'); //This is the file where we save the    information
     $ch = curl_init(str_replace(" ", "%20", $url)); //Here is the file we are downloading, replace spaces with %20
     curl_setopt($ch, CURLOPT_TIMEOUT, 50);
@@ -214,11 +215,11 @@ function netangelss3_s3_name($name)
     return $name;
 }
 
-function netangelss3_s3_namewithMd5($fullname,$name2)
+function netangelss3_s3_namewithMd5($fullname, $name2)
 {
     $path_parts = pathinfo($name2);
     $md5OfFile = md5_file($fullname);
-    $name = $path_parts['dirname'].DIRECTORY_SEPARATOR.$path_parts['filename'].'-'.$md5OfFile.'.'.$path_parts['extension'];
+    $name = $path_parts['dirname'] . DIRECTORY_SEPARATOR . $path_parts['filename'] . '-' . $md5OfFile . '.' . $path_parts['extension'];
     return $name;
 }
 
@@ -226,7 +227,7 @@ function netangelss3_s3_namewithMd5($fullname,$name2)
 function netangelss3_urlGetFullUrl($name)
 {
     $bucket = netangelss3_getDefaultBucket();
-    $url = 'http://' . $bucket . '.' . NETANGELSS3_ENDPOINT . '/' . $name;
+    $url = 'http://' . $bucket . '.' . NETANGELSS3_ENDPOINT . '/' . urlencode($name);
     return $url;
 }
 
@@ -281,7 +282,7 @@ function netangelss3_fileDesc($file)
 {
     $upload_dir = wp_upload_dir();
     $full_file = $upload_dir['basedir'] . $file;
-    if (strpos($file, '/'.NETANGELSS3_DOWNLOAD_SPECIAL_DIR_NAME.'/') !== false) {
+    if (strpos($file, '/' . NETANGELSS3_DOWNLOAD_SPECIAL_DIR_NAME . '/') !== false) {
         return NETANGELSS3_MESSAGES_BEFORE_DOWNLOADING_FROM_S3;
     }
 }
@@ -320,4 +321,14 @@ function netangelss3_getLiElement($item)
     $s .= '</div>';
     $s .= '</li>';
     return $s;
+}
+
+function netangelss3_writelog($message, $level = 'DEBUG')
+{
+    if (NETANGELSS3_DEBUG_LOG) {
+        touch(NETANGELSS3_DEBUG_LOGFILE);
+        $f = fopen(NETANGELSS3_DEBUG_LOGFILE, 'a');
+        fwrite($f, '[' . date('r') . '] ' . $message . "\r\n");
+        fclose($f);
+    }
 }

@@ -12,6 +12,8 @@ License: GPL
 define(NETANGELSS3_DEBUG, false);
 define(NETANGELSS3_JS_DEBUG, false);
 define(NETANGELSS3_WPCRON_DEBUG, false);
+define(NETANGELSS3_DEBUG_LOG, true);
+define(NETANGELSS3_DEBUG_LOGFILE, 'netangelss3.log');
 
 define(NETANGELSS3_DOWNLOAD_SPECIAL_DIR, false);
 define(NETANGELSS3_DOWNLOAD_SPECIAL_DIR_NAME, 'from_netangels_s3');
@@ -328,6 +330,10 @@ function netangelss3_optionsFilesToS3()
 
 function netangelss3_getOneFileFromCloud($name, $create_atth = false, $move = false)
 {
+    netangelss3_writelog('netangelss3_getOneFileFromCloud name:'.$name);
+    netangelss3_writelog('netangelss3_getOneFileFromCloud create_atth:'.$create_atth);
+    netangelss3_writelog('netangelss3_getOneFileFromCloud move:'.$move);
+
     $s3 = netangelss3_create();
     $upload_dir = wp_upload_dir();
     $basename = basename($name);
@@ -355,6 +361,7 @@ function netangelss3_getOneFileFromCloud($name, $create_atth = false, $move = fa
     if (file_exists($destpath) and filesize($destpath) == 0) {
         return false;
     }
+
     netangelss3_replace_in_post_and_pages($srcpath_url, $destpath_url);
     if ($move) {
         $rd = netangelss3_deleteInCloud($s3, $name);
@@ -380,6 +387,7 @@ function netangelss3_get_from_cloud()
     global $wpdb;
     $s3 = netangelss3_create();
     $create_atth = true;
+    netangelss3_writelog('netangelss3_get_from_cloud:'.$_REQUEST['file']);
     $files = array($_REQUEST['file']);
     if (strpos($_REQUEST['file'], ';')) {
         $files = explode(';', $_REQUEST['file']);
