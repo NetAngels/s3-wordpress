@@ -12,7 +12,19 @@ function debug(s)
         }
     }
 }
+function showNoMoreFiles()
+{
+    jQuery('#files_table').hide();
+    jQuery('#no_more_files').show();
+}
 
+function countFiles()
+{
+    if (jQuery('.file').length==0)
+    {
+        showNoMoreFiles();
+    }
+}
 function disableAllCheckBoxes() {
     jQuery('input[type=checkbox]').attr('disabled', 'disabled');
 }

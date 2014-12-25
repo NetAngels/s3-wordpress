@@ -38,6 +38,7 @@ define(NETANGELSS3_ENDED, 'Завершено');
 define(NETANGELSS3_SELALL, 'Выделить все');
 define(NETANGELSS3_SEL, 'Выбрать');
 define(NETANGELSS3_FILE, 'файл');
+define(NETANGELSS3_FILE_NO_MORE, 'нет больше файлов');
 define(NETANGELSS3_FILE_TYPE, 'тип');
 define(NETANGELSS3_FILE_S3_WP_FILE, 'вложение WP в S3');
 define(NETANGELSS3_FILE_WP_FILE, 'файл в S3');

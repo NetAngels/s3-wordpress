@@ -60,6 +60,7 @@
                         window.canceled = false;
                         enableAllCheckBoxes();
                         hideCancel();
+                        countFiles();
                         return 0;
                     }
                     netangelss3_send_checked_files_to_cloud();
@@ -82,7 +83,7 @@
     </span>
     <div id="process"></div>
     <br/>
-    <table class="wp-list-table widefat fixed pages">
+    <table class="wp-list-table widefat fixed pages" id="files_table">
         <thead>
         <tr>
             <th scope="col" id="cb" class="manage-column column-cb check-column" style="">
@@ -132,6 +133,7 @@
         <?php } ?>
         </tbody>
     </table>
+    <div id="no_more_files" style="display: none"><?php echo NETANGELSS3_FILE_NO_MORE; ?></div>
     <p class="submit"><input type="submit" name="submit" id="submit"
                              class="button button-primary send_to_cloud  itsbold"
                              value="<?php echo NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_SEND_TO_CLOUD; ?>"></p>

@@ -134,7 +134,7 @@ function netangelss3_sendToCloud($s3inc, $uploadFile, $objname = '')
 function netangelss3_remoteFileExists($path)
 {
     if ((strpos($path, 'http://') === false) and (strpos($path, 'https://') === false)) {
-        $path = netangelss3_urlGetFullUrl($path);
+        $path = netangelss3_urlGetFullUrl($path,True);
     }
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -197,7 +197,7 @@ function netangelss3_deleteInCloud($s3inc, $name)
 function netangelss3_getFromCloud($s3inc, $name, $destfile)
 {
     netangelss3_writelog('netangelss3_getFromCloud name:' . $name);
-    $url = netangelss3_urlGetFullUrl($name);
+    $url = netangelss3_urlGetFullUrl($name,true);
     netangelss3_writelog('netangelss3_getFromCloud url:' . $url);
     $fp = fopen($destfile, 'w+'); //This is the file where we save the    information
     $ch = curl_init(str_replace(" ", "%20", $url)); //Here is the file we are downloading, replace spaces with %20
@@ -224,10 +224,14 @@ function netangelss3_s3_namewithMd5($fullname, $name2)
 }
 
 
-function netangelss3_urlGetFullUrl($name)
+function netangelss3_urlGetFullUrl($name,$encode = false)
 {
     $bucket = netangelss3_getDefaultBucket();
-    $url = 'http://' . $bucket . '.' . NETANGELSS3_ENDPOINT . '/' . urlencode($name);
+    if ($encode)
+    {
+       $name =  urlencode($name);
+    }
+    $url = 'http://' . $bucket . '.' . NETANGELSS3_ENDPOINT . '/' . $name;
     return $url;
 }
 
