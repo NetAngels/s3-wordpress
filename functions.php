@@ -112,7 +112,6 @@ function netangelss3_getAttachmentFilesList($remove_upload_dir = false)
     }
     if ($remove_upload_dir) {
         $upload_dir = wp_upload_dir();
-        print_r($upload_dir);
         $t = array();
         foreach ($thumbimgs as $item) {
             $file = strtr($item, array($upload_dir['basedir'] . DIRECTORY_SEPARATOR => ''));
@@ -164,8 +163,6 @@ function netangelss3_sendToCloud($s3inc, $uploadFile, $objname = '')
 function netangelss3_FileInAtth($file)
 {
     $atths = netangelss3_getAttachmentFilesList(true);
-    print_r($atths);
-    print '///['.$file.']///';
     if (in_array($file, $atths)) {
         return true;
     }
