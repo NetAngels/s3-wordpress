@@ -92,6 +92,36 @@ function netangelss3_getAttachmentList()
     return $thumbimgs;
 }
 
+function netangelss3_getAttachmentFilesList($remove_upload_dir = false)
+{
+    $upload_dir = wp_upload_dir();
+    $thumbimgs = array();
+    $args = array('post_type' => 'attachment', 'numberposts' => -1, 'post_status' => null, 'post_parent' => null);
+    $attachments = get_posts($args);
+    if ($attachments) {
+        foreach ($attachments as $post) {
+            $file = get_attached_file($post->ID);
+            $thumbimgs[] = $file;
+            $path = dirname($file);
+            if (!is_array($imagedata = wp_get_attachment_metadata($post->ID, true))) continue;
+            if (count($imagedata['sizes']) == 0) continue;
+            foreach ($imagedata['sizes'] as $thumb) {
+                $thumbimgs[] = $path . DIRECTORY_SEPARATOR . $thumb['file'];
+            }
+        }
+    }
+    if ($remove_upload_dir) {
+        $upload_dir = wp_upload_dir();
+        print_r($upload_dir);
+        $t = array();
+        foreach ($thumbimgs as $item) {
+            $file = strtr($item, array($upload_dir['basedir'] . DIRECTORY_SEPARATOR => ''));
+            $t[] = $file;
+        }
+        $thumbimgs = $t;
+    }
+    return $thumbimgs;
+}
 
 function netangelss3_replace_in_post_and_pages($from, $to, $to_local = false)
 {
@@ -131,10 +161,21 @@ function netangelss3_sendToCloud($s3inc, $uploadFile, $objname = '')
     return netangelss3_urlGetFullUrl($objname);
 }
 
+function netangelss3_FileInAtth($file)
+{
+    $atths = netangelss3_getAttachmentFilesList(true);
+    print_r($atths);
+    print '///['.$file.']///';
+    if (in_array($file, $atths)) {
+        return true;
+    }
+    return false;
+}
+
 function netangelss3_remoteFileExists($path)
 {
     if ((strpos($path, 'http://') === false) and (strpos($path, 'https://') === false)) {
-        $path = netangelss3_urlGetFullUrl($path,True);
+        $path = netangelss3_urlGetFullUrl($path, True);
     }
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -197,7 +238,7 @@ function netangelss3_deleteInCloud($s3inc, $name)
 function netangelss3_getFromCloud($s3inc, $name, $destfile)
 {
     netangelss3_writelog('netangelss3_getFromCloud name:' . $name);
-    $url = netangelss3_urlGetFullUrl($name,true);
+    $url = netangelss3_urlGetFullUrl($name, true);
     netangelss3_writelog('netangelss3_getFromCloud url:' . $url);
     $fp = fopen($destfile, 'w+'); //This is the file where we save the    information
     $ch = curl_init(str_replace(" ", "%20", $url)); //Here is the file we are downloading, replace spaces with %20
@@ -224,12 +265,11 @@ function netangelss3_s3_namewithMd5($fullname, $name2)
 }
 
 
-function netangelss3_urlGetFullUrl($name,$encode = false)
+function netangelss3_urlGetFullUrl($name, $encode = false)
 {
     $bucket = netangelss3_getDefaultBucket();
-    if ($encode)
-    {
-       $name =  urlencode($name);
+    if ($encode) {
+        $name = urlencode($name);
     }
     $url = 'http://' . $bucket . '.' . NETANGELSS3_ENDPOINT . '/' . $name;
     return $url;

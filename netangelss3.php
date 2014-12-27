@@ -13,6 +13,8 @@ define(NETANGELSS3_DEBUG, false);
 define(NETANGELSS3_JS_DEBUG, false);
 define(NETANGELSS3_WPCRON_DEBUG, false);
 define(NETANGELSS3_DEBUG_LOG, true);
+define(NETANGELSS3_ENABLE_TESTS, true);
+define(NETANGELSS3_ENABLE_TESTS_STR, 'Тесты');
 define(NETANGELSS3_DEBUG_LOGFILE, 'netangelss3.log');
 
 define(NETANGELSS3_DOWNLOAD_SPECIAL_DIR, false);
@@ -228,6 +230,33 @@ function netangelss3_options_view()
     include('template/options.php');
 }
 
+// Функция для тестирования
+function netangelss3_tests()
+{
+    $files_atth = netangelss3_getAttachmentFilesList(true);
+    print '<br /><br /><br />LIST_ATTH_FILES:<br />';
+    print '<pre>';
+    print_r($files_atth);
+    print '</pre>';
+    print '<hr>';
+    //-----------------------------------------------
+    $s3 = netangelss3_create();
+    $files_remote = netangelss3_getList($s3);
+    print '<pre>';
+    //print_r($files_remote);
+    print '</pre><br /><br /><br />';
+    $cnt = 0;
+    foreach ($files_remote as $file) {
+        $cnt++;
+        print $cnt . '. ' . $file['name'];
+        if (in_array($file['name'], $files_atth)) {
+            print '<b>EXISTS ATTH</b>';
+        }
+        print '<br />';
+    }
+
+}
+
 function netangelss3_options()
 {
     $action = $_REQUEST['action'];
@@ -235,6 +264,8 @@ function netangelss3_options()
         netangelss3_optionsFilesToS3();
     } elseif ($action == 'netangelss3-options-files-from-s3') {
         netangelss3_optionsFilesFromS3();
+    } elseif ($action == 'netangelss3-tests') {
+        netangelss3_tests();
     } else {
         netangelss3_options_view();
     }
@@ -258,7 +289,7 @@ function netangelss3_optionsFilesFromS3()
     $local_files = array();
     foreach ($atth as $at) {
         if (count($at['meta']['sizes']) == 0) continue; // Есть ли мета sizes
-        if (file_exists($at['file'])) continue;  // Файл есть локально
+        if (file_exists($at['file'])) continue; // Файл есть локально
         $file1 = '';
         $file2 = '';
         $files_count = 0;
@@ -273,32 +304,31 @@ function netangelss3_optionsFilesFromS3()
         }
         //-----
         foreach ($at['meta']['sizes'] as $file) {
-            $file =  $dir['dirname'] . DIRECTORY_SEPARATOR . $file['file'];
+            $file = $dir['dirname'] . DIRECTORY_SEPARATOR . $file['file'];
             if (in_array($file, $files_remote_list)) {
                 // Добавляем превьюхи
                 $local_files[] = $file;
-                $file2 .= ';'.$file;
+                $file2 .= ';' . $file;
                 $files_count++;
             }
         }
         //-----
         $files[] = array(
-                         'name' => $at['title'],
-                         'file' => $file2,
-                         'type' => 'atth',
-                         'cnt'  => $files_count
+            'name' => $at['title'],
+            'file' => $file2,
+            'type' => 'atth',
+            'cnt' => $files_count
         );
         //print '<b>' .$at['title'].' '.$file2 . '</b><br /><br />';
 
     }
     // Теперь есть список файлов из аттачей есть
-    foreach($files_remote as $fr)
-    {
+    foreach ($files_remote as $fr) {
         $files[] = array(
             'name' => $fr['name'],
             'file' => $fr['name'],
             'type' => 'remote',
-            'cnt'  => 0
+            'cnt' => 0
         );
     }
     //$files
@@ -331,9 +361,9 @@ function netangelss3_optionsFilesToS3()
 
 function netangelss3_getOneFileFromCloud($name, $create_atth = false, $move = false)
 {
-    netangelss3_writelog('netangelss3_getOneFileFromCloud name:'.$name);
-    netangelss3_writelog('netangelss3_getOneFileFromCloud create_atth:'.$create_atth);
-    netangelss3_writelog('netangelss3_getOneFileFromCloud move:'.$move);
+    netangelss3_writelog('netangelss3_getOneFileFromCloud name:' . $name);
+    netangelss3_writelog('netangelss3_getOneFileFromCloud create_atth:' . $create_atth);
+    netangelss3_writelog('netangelss3_getOneFileFromCloud move:' . $move);
 
     $s3 = netangelss3_create();
     $upload_dir = wp_upload_dir();
@@ -388,7 +418,7 @@ function netangelss3_get_from_cloud()
     global $wpdb;
     $s3 = netangelss3_create();
     $create_atth = true;
-    netangelss3_writelog('netangelss3_get_from_cloud:'.$_REQUEST['file']);
+    netangelss3_writelog('netangelss3_get_from_cloud:' . $_REQUEST['file']);
     $files = array($_REQUEST['file']);
     if (strpos($_REQUEST['file'], ';')) {
         $files = explode(';', $_REQUEST['file']);
@@ -400,6 +430,15 @@ function netangelss3_get_from_cloud()
     }
 
     foreach ($files as $onefile) {
+        netangelss3_writelog('netangelss3_get_from_cloud  onefile:' . $onefile);
+        $create_atth = netangelss3_FileInAtth($onefile);
+        $create_atth = !$create_atth;
+        if ($create_atth) {
+            netangelss3_writelog('netangelss3_get_from_cloud  create_atth:1');
+        } else {
+            netangelss3_writelog('netangelss3_get_from_cloud  create_atth: 0');
+        }
+
         if (!netangelss3_getOneFileFromCloud($onefile, $create_atth, $move)) {
             die('ERR');
         }
@@ -464,6 +503,9 @@ function netangelss3_options_add_to_menu()
     if (NETANGELSS3_SHOW_MOVE_LINK_IN_MENU) {
         add_plugins_page('NetAngels S3', NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_FILES_TO, 'manage_options', 'netangelss3-options-files-to-s3', 'netangelss3_optionsFilesToS3');
         add_plugins_page('NetAngels S3', NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_FILES_FROM, 'manage_options', 'netangelss3-options-files-from-s3', 'netangelss3_optionsFilesFromS3');
+        if (NETANGELSS3_TESTS) {
+            add_plugins_page('NetAngels S3', NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_FILES_FROM, 'manage_options', 'netangelss3-tests', 'netangelss3_tests');
+        }
     } else {
     }
 }

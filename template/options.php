@@ -109,6 +109,11 @@
             <li>
                 <a href="plugins.php?page=netangelss3-options&action=netangelss3-options-files-from-s3"><?php echo NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_FILES_FROM; ?></a>
             </li>
+            <?php if (NETANGELSS3_ENABLE_TESTS) { ?>
+                <li>
+                    <a href="plugins.php?page=netangelss3-options&action=netangelss3-tests"><?php echo NETANGELSS3_ENABLE_TESTS_STR; ?></a>
+                </li>
+            <?php } ?>
         </ol>
     <?php } ?>
 </div>
