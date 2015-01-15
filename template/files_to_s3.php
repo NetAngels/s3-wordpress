@@ -17,7 +17,12 @@
         window.canceled = false;
         function netangelss3_send_file(fl, callbk) {
             var move = 0;
-            <?php if (NETANGELSS3_JS_DEBUG) { ?>debug('canceled:');  debug(window.canceled);   <?php } ?>
+            <?php if (NETANGELSS3_MOVE_ONLY) { ?>
+            move = 1;
+            <?php } ?>
+            <?php if (NETANGELSS3_JS_DEBUG) { ?>debug('canceled:');
+            debug(window.canceled);
+            <?php } ?>
             if (window.canceled) {
                 <?php if (NETANGELSS3_JS_DEBUG) { ?>debug('canceled start');
                 <?php } ?>
@@ -38,11 +43,10 @@
                 },
                 function (response) {
                     //if callbk != nullcallbk(respons);
-                    if (response == 'ERR')
-                    {
-                            setProcess('<?php echo NETANGELSS3_TO_ERROR; ?> '+fl);
-                            enableAllCheckBoxes();
-                            return 0;
+                    if (response == 'ERR') {
+                        setProcess('<?php echo NETANGELSS3_TO_ERROR; ?> ' + fl);
+                        enableAllCheckBoxes();
+                        return 0;
                     }
                     jQuery('#the-list input.file:checked').each(function (index, element) {
                         if (fl == jQuery(this).val()) {
@@ -71,8 +75,11 @@
     <script src="<?php echo plugins_url('netangelss3/js/functions.js'); ?>" type="text/javascript"></script>
     <p class="submit"><input type="submit" name="submit" id="submit" class="button button-primary send_to_cloud itsbold"
                              value="<?php echo NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_SEND_TO_CLOUD; ?>">
-        &nbsp; <? echo NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_LOCAL; ?><input id="move_to_cloud"
-                                                                                       type="checkbox"></p>
+        <?php if (!NETANGELSS3_MOVE_ONLY) { ?>
+            &nbsp; <? echo NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_LOCAL; ?>
+            <input id="move_to_cloud" type="checkbox">
+        <?php } ?>
+    </p>
     <p class="cancel_area hide">
         <input type="submit" name="submit" id="cancel" class="button button-primary send_to_cloud itsbold cancel"
                value="<?php echo NETANGELSS3_CANCEL; ?>">

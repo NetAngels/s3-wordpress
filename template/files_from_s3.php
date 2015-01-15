@@ -17,6 +17,9 @@
         window.canceled = false;
         function netangelss3_send_file(fl, callbk) {
             var move = 0;
+            <?php if (NETANGELSS3_MOVE_ONLY) { ?>
+            move = 1;
+            <?php } ?>
             if (window.canceled) {
                 setProcess('<?php echo NETANGELSS3_CANCELED; ?>');
                 enableAllCheckBoxes();
@@ -62,10 +65,14 @@
         }
     </script>
     <script src="<?php echo plugins_url('netangelss3/js/functions.js'); ?>" type="text/javascript"></script>
-    <p class="submit"><input type="submit" name="submit" id="submit" class="button button-primary send_to_cloud itsbold"
+    <p class="submit">
+        <input type="submit" name="submit" id="submit" class="button button-primary send_to_cloud itsbold"
                              value="<?php echo NETANGELSS3_MESSAGES_MANUAL_DOWNLOAD_FROM_CLOUD; ?>">
-        &nbsp; <?php echo NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD; ?> <input id="move_to_cloud"
-                                                                                              type="checkbox"></p>
+    <?php if (!NETANGELSS3_MOVE_ONLY) { ?>
+        &nbsp; <?php echo NETANGELSS3_MESSAGES_MANUAL_MOVE_OR_COPY_DELETE_IN_CLOUD; ?>
+        <input id="move_to_cloud" type="checkbox">
+    <?php } ?>
+    </p>
     <p class="cancel_area hide">
         <input type="submit" name="submit" id="cancel" class="button button-primary send_to_cloud itsbold cancel"
                value="<?php echo NETANGELSS3_CANCEL; ?>">
