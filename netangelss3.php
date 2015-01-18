@@ -16,6 +16,7 @@ define(NETANGELSS3_DEBUG_LOG, true);
 define(NETANGELSS3_ENABLE_TESTS, true);
 define(NETANGELSS3_ENABLE_TESTS_STR, 'Тесты');
 define(NETANGELSS3_DEBUG_LOGFILE, 'netangelss3.log');
+define(NETANGELSS3_CURL_USERAGENT, 'Mozilla 4.0 (Netangels S3 Wordpress Plugin)');
 
 define(NETANGELSS3_DOWNLOAD_SPECIAL_DIR, false);
 define(NETANGELSS3_DOWNLOAD_SPECIAL_DIR_NAME, 'from_netangels_s3');
@@ -732,38 +733,52 @@ function netangelss3_uploadTask()
 
 function netangelss3_add_filter_to_wp_handle_upload()
 {
-    add_filter( 'wp_handle_upload',   'netangelss3_filter_wp_handle_upload' );
-    //add_filter('wp_unique_filename', 'netangelss3_filter_wp_unique_filename');
-    add_action('wp_unique_filename', 'netangelss3_filter_wp_unique_filename');
-    if (NETANGELSS3_DEBUG) {
-        $admin_email = get_option('admin_email');
-        wp_mail($admin_email, 'WPCRON_DEBUG_START netangelss3_add_filterS', 'netangelss3_add_filterS');
-    }
+    //add_filter( 'wp_handle_upload',   'netangelss3_filter_wp_handle_upload' );
+    add_filter('wp_handle_upload_prefilter', 'netangelss3_filter_wp_handle_upload_prefilter');
+    //add_filter('wp_unique_filename', 'netangelss3_filter_wp_unique_filename',10, 2);
+    //add_action('wp_unique_filename', 'netangelss3_filter_wp_unique_filename');
 }
+
 
 function netangelss3_filter_wp_handle_upload($file, $overrides = false, $time = null)
 {
-    add_filter('wp_unique_filename', 'netangelss3_filter_wp_unique_filename');
-    if (NETANGELSS3_DEBUG) {
-        $admin_email = get_option('admin_email');
-        wp_mail($admin_email, 'WPCRON_DEBUG_START netangelss3_filter_wp_handle_upload', 'netangelss3_filter_wp_handle_upload');
-        mail($admin_email, 'WPCRON_DEBUG_START netangelss3_filter_wp_handle_upload', 'netangelss3_filter_wp_handle_upload');
-    }
+
 }
 
 function netangelss3_filter_wp_unique_filename($dir, $name, $ext)
 {
-    if (NETANGELSS3_DEBUG) {
-        $admin_email = get_option('admin_email');
-        wp_mail($admin_email, 'WPCRON_DEBUG_START netangelss3_filter_wp_handle_upload', 'netangelss3_filter_wp_unique_filename dir:[' . $dir . '] name:[' . $name . '] ext:[' . $ext . ']');
-        mail($admin_email, 'WPCRON_DEBUG_START netangelss3_filter_wp_handle_upload', 'netangelss3_filter_wp_unique_filename dir:[' . $dir . '] name:[' . $name . '] ext:[' . $ext . ']');
-    }
-    return $dir . $name . '--.' . $ext;
+
 }
 
-if (NETANGELSS3_DEBUG) {
-    $admin_email = get_option('admin_email');
-    mail($admin_email, 'WPCRON_DEBUG_START netangelss3_main', 'main');
+function netangelss3_filter_wp_handle_upload_prefilter($file)
+{
+    //add_filter('wp_unique_filename', 'netangelss3_filter_wp_unique_filename');
+
+    $s = '';
+
+    $upload_dir = wp_upload_dir();
+    $filename = $upload_dir['subdir'] . DIRECTORY_SEPARATOR . $file['name'];
+    $filename_pathinfo = pathinfo($filename);
+    $remote_filename = netangelss3_urlGetFullUrl($filename, True);
+    $cnt = 0;
+    while (netangelss3_remoteFileExists($remote_filename)) {
+        $cnt++;
+        $filename = $filename_pathinfo['dirname'] . DIRECTORY_SEPARATOR . $filename_pathinfo['filename'] . '-' . $cnt . '.' . $filename_pathinfo['extension'];
+        $remote_filename = netangelss3_urlGetFullUrl($filename, True);
+    }
+
+    if ($cnt > 0) {
+        $file['name'] = $filename_pathinfo['filename'] . '-' . $cnt . '.' . $filename_pathinfo['extension'];
+    }
+    if (NETANGELSS3_DEBUG) {
+        $admin_email = get_option('admin_email');
+        foreach ($file as $k => $f) {
+            $s .= $k . '=' . $f . '<br />';
+        }
+        wp_mail($admin_email, 'WPCRON_DEBUG_START netangelss3_filter_wp_handle_upload_prefilter', 'netangelss3_filter_wp_handle_upload_prefilter' . $s);
+    }
+
+    return $file;
 }
-add_filter('wp_unique_filename', 'netangelss3_filter_wp_unique_filename');
+
 add_action('admin_init', 'netangelss3_add_filter_to_wp_handle_upload', 999);

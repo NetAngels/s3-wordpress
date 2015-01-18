@@ -178,7 +178,7 @@ function netangelss3_remoteFileExists($path)
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_URL, $path);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla 4.0');
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla 4.0 (Netangels S3 Wordpress Plugin');
     curl_setopt($ch, CURLOPT_HEADER, true);
     curl_setopt($ch, CURLINFO_HEADER_OUT, true);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'HEAD'); // HTTP request is 'HEAD'
@@ -187,10 +187,10 @@ function netangelss3_remoteFileExists($path)
 
     $content = curl_exec($ch);
     if (curl_errno($ch)) {
-        //return false;
+        return false;
     }
+
     $result = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    print $result;
     $ret_result = false;
     if ($result == 200) {
         $ret_result = true;
@@ -242,6 +242,7 @@ function netangelss3_getFromCloud($s3inc, $name, $destfile)
     curl_setopt($ch, CURLOPT_TIMEOUT, 50);
     curl_setopt($ch, CURLOPT_FILE, $fp); // write curl response to file
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla 4.0 (Netangels S3 Wordpress Plugin)');
     curl_exec($ch); // get curl response
     curl_close($ch);
     fclose($fp);
@@ -264,9 +265,23 @@ function netangelss3_s3_namewithMd5($fullname, $name2)
 
 function netangelss3_urlGetFullUrl($name, $encode = false)
 {
+    //print '<pre>'; var_dump($encode); print '</pre>';
     $bucket = netangelss3_getDefaultBucket();
+    if (substr($name, 0, 1) == '/') {
+        $name = substr($name, 1);
+    }
     if ($encode) {
-        $name = urlencode($name);
+        $name_arr = explode('/', $name);
+        $name_arr2 = array();
+        foreach ($name_arr as $name1) {
+            $name1 = rawurlencode($name1);
+            $name_arr2[] = $name1;
+        }
+        $name_arr = $name_arr2;
+        $name = implode('/', $name_arr);
+        // Убирает утечки памяти 8)
+        $name_arr = array();
+        $name_arr2 = array();
     }
     $url = 'http://' . $bucket . '.' . NETANGELSS3_ENDPOINT . '/' . $name;
     return $url;
@@ -349,7 +364,7 @@ function netangelss3_getLiElement($item)
     $typ = netangelss3_getTypeByName($name);
     switch ($typ['maintype']) {
         case 'image':
-            $s .= '<img src="/wp-includes/images/media/default.png" class="netangels_icon" draggable="false">';;
+            $s .= '<img src="/wp-includes/images/media/default.png" class="netangels_icon" draggable="false">';
             break;
         default:
             $s .= '<img src="/wp-includes/images/media/' . $type['wptype'] . '.png" class="netangels_icon" draggable="false">';
