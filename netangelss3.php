@@ -15,7 +15,7 @@ define(NETANGELSS3_WPCRON_DEBUG, false);
 define(NETANGELSS3_DEBUG_LOG, true);
 define(NETANGELSS3_ENABLE_TESTS, true);
 define(NETANGELSS3_ENABLE_TESTS_STR, 'Тесты');
-define(NETANGELSS3_DEBUG_LOGFILE, 'netangelss3.log');
+define(NETANGELSS3_DEBUG_LOGFILE, __DIR__ . DIRECTORY_SEPARATOR . 'netangelss3.log');
 define(NETANGELSS3_CURL_USERAGENT, 'Mozilla 4.0 (Netangels S3 Wordpress Plugin)');
 
 define(NETANGELSS3_DOWNLOAD_SPECIAL_DIR, false);
@@ -32,6 +32,8 @@ define(NETANGELSS3_ATTH_REMOTE_TEST_EXISTS, true);
 define(NETANGELSS3_ATTH_REMOVE_ON_MOVE, false);
 define(NETANGELSS3_REPLACE_ON_COPY, true);
 define(NETANGELSS3_MOVE_ONLY, true);
+define(NETANGELSS3_ONLY_REMOTE_ATTH, false);
+
 
 define(NETANGELSS3_BACK, '&lt;&lt; Назад');
 define(NETANGELSS3_HTML_NEWLINE, "\r\n");
@@ -290,8 +292,6 @@ function netangelss3_optionsFilesFromS3()
     $files_remote_list = array_keys($files_remote);
     $local_files = array();
     foreach ($atth as $at) {
-        if (count($at['meta']['sizes']) == 0) continue; // Есть ли мета sizes
-        if (file_exists($at['file'])) continue; // Файл есть локально
         $file1 = '';
         $file2 = '';
         $files_count = 0;
@@ -315,23 +315,30 @@ function netangelss3_optionsFilesFromS3()
             }
         }
         //-----
-        $files[] = array(
-            'name' => $at['title'],
-            'file' => $file2,
-            'type' => 'atth',
-            'cnt' => $files_count
-        );
+        if ($files_count > 0) {
+            $files[] = array(
+                'name' => $at['title'],
+                'file' => $file2,
+                'type' => 'atth',
+                'cnt' => $files_count
+            );
+        }
         //print '<b>' .$at['title'].' '.$file2 . '</b><br /><br />';
 
     }
     // Теперь есть список файлов из аттачей есть
-    foreach ($files_remote as $fr) {
-        $files[] = array(
-            'name' => $fr['name'],
-            'file' => $fr['name'],
-            'type' => 'remote',
-            'cnt' => 0
-        );
+    if (!NETANGELSS3_ONLY_REMOTE_ATTH) {
+        foreach ($files_remote as $fr) {
+            if (in_array($fr['name'], $local_files)) {
+                continue;
+            }
+            $files[] = array(
+                'name' => $fr['name'],
+                'file' => $fr['name'],
+                'type' => 'remote',
+                'cnt' => 0
+            );
+        }
     }
     //$files
     /*

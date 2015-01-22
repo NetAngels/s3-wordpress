@@ -119,6 +119,11 @@ function netangelss3_getAttachmentFilesList($remove_upload_dir = false)
         }
         $thumbimgs = $t;
     }
+    if (NETANGELSS3_DEBUG) {
+        print '<pre>';
+        print $thumbimgs;
+        print '</pre>';
+    }
     return $thumbimgs;
 }
 
