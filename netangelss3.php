@@ -9,11 +9,11 @@ Author URI: ural.im
 License: GPL
 */
 
-define(NETANGELSS3_DEBUG, true);
+define(NETANGELSS3_DEBUG, false);
 define(NETANGELSS3_JS_DEBUG, false);
 define(NETANGELSS3_WPCRON_DEBUG, false);
-define(NETANGELSS3_DEBUG_LOG, true);
-define(NETANGELSS3_ENABLE_TESTS, true);
+define(NETANGELSS3_DEBUG_LOG, false);
+define(NETANGELSS3_ENABLE_TESTS, false);
 define(NETANGELSS3_ENABLE_TESTS_STR, 'Тесты');
 define(NETANGELSS3_DEBUG_LOGFILE, __DIR__ . DIRECTORY_SEPARATOR . 'netangelss3.log');
 define(NETANGELSS3_CURL_USERAGENT, 'Mozilla 4.0 (Netangels S3 Wordpress Plugin)');
