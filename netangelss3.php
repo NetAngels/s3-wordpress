@@ -11,7 +11,7 @@ License: GPL
 
 define(NETANGELSS3_DEBUG, false);
 define(NETANGELSS3_JS_DEBUG, false);
-define(NETANGELSS3_WPCRON_DEBUG, false);
+define(NETANGELSS3_WPCRON_DEBUG, true);
 define(NETANGELSS3_DEBUG_LOG, false);
 define(NETANGELSS3_ENABLE_TESTS, false);
 define(NETANGELSS3_ENABLE_TESTS_STR, 'Тесты');
@@ -651,6 +651,7 @@ add_action('netangelss3_upload_hook', 'netangelss3_uploadTask');
 
 function netangelss3_uploadTask()
 {
+    @set_time_limit(0);
     $wp_debug_it = true;
     $admin_email = get_option('admin_email');
     if (NETANGELSS3_WPCRON_DEBUG) {
@@ -728,9 +729,14 @@ function netangelss3_uploadTask()
             break;
         }
         $from2 = $upload_dir['baseurl'] . $name1;
-        netangelss3_replace_in_post_and_pages($from2, $r);
-        netangelss3_removeAttach($name1);
-        unlink($upload_dir['basedir'] . $name1);
+
+
+        if (netangelss3_remoteFileExists($name2)) { // Проверит точно наличие файла в облаке и только теперь грохним локальный файл
+            unlink($upload_dir['basedir'] . $name1);
+            netangelss3_removeAttach($name1);
+            netangelss3_replace_in_post_and_pages($from2, $r);
+        }
+
         if (NETANGELSS3_WPCRON_DEBUG) {
             wp_mail($admin_email, 'WPCRON_DEBUG', $s);
         }
