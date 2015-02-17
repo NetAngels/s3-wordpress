@@ -871,8 +871,8 @@ function netangelss3_uploadTaskAtth()
                 'file' => get_attached_file($post->ID),
                 'meta' => $imagedata,
             );
-            */
             //$thumbimgs[] = wp_get_attachment_link( $post->ID, 'thumbnail-size', true );
+            */
         $all_transfer_size = $all_transfer_size + $file_size; // чтобы хотя бы один файл за раз
     }
 
