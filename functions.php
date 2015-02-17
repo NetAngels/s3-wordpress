@@ -176,9 +176,12 @@ function netangelss3_FileInAtth($file)
 
 function netangelss3_remoteFileExists($path)
 {
+    netangelss3_writelog('netangelss3_remoteFileExists path before fix'.$path);
     if ((strpos($path, 'http://') === false) and (strpos($path, 'https://') === false)) {
         $path = netangelss3_urlGetFullUrl($path, True);
     }
+    netangelss3_writelog('netangelss3_remoteFileExists path after fix'.$path);
+
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_URL, $path);
@@ -192,12 +195,14 @@ function netangelss3_remoteFileExists($path)
 
     $content = curl_exec($ch);
     if (curl_errno($ch)) {
+        netangelss3_writelog('netangelss3_remoteFileExists error exec return false');
         return false;
     }
 
     $result = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $ret_result = false;
     if ($result == 200) {
+        netangelss3_writelog('netangelss3_remoteFileExists result true ');
         $ret_result = true;
     }
     curl_close($ch);
@@ -256,6 +261,7 @@ function netangelss3_getFromCloud($s3inc, $name, $destfile)
 function netangelss3_s3_name($name)
 {
     $name = substr($name, 1);
+    netangelss3_writelog('netangelss3_s3_name return  name'.$name);
     return $name;
 }
 
