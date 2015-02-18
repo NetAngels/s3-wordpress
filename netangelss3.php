@@ -643,20 +643,14 @@ add_filter('media_upload_netangelss3', 'netangelss3_view_tab');
 
 function netangelss3_wp_get_attachment_url($link, $id)
 {
-    netangelss3_writelog('netangelss3_wp_get_attachment_url link:' . $link);
-    netangelss3_writelog('netangelss3_wp_get_attachment_url id:' . $id);
+    netangelss3_writelog('netangelss3_wp_get_attachment_url link:'.$link);
+    netangelss3_writelog('netangelss3_wp_get_attachment_url id:'.$id);
     $file_path = get_attached_file($id);
-    netangelss3_writelog('netangelss3_wp_get_attachment_url file_path:' . $file_path);
+    netangelss3_writelog('netangelss3_wp_get_attachment_url file_path:'.$file_path);
     if (file_exists($file_path)) {
-        netangelss3_writelog('netangelss3_wp_get_attachment_url ok_local_file:' . $file_path . ' ' . $link);
+        netangelss3_writelog('netangelss3_wp_get_attachment_url ok_local_file:'.$file_path.' '.$link);
+        netangelss3_writelog('netangelss3_wp_get_attachment_url s3_file_or_not_found:'.$link);
         return $link;
-    }
-    $upload_dir = wp_upload_dir();
-    $link = strtr($link, array($upload_dir['baseurl'] => ''));
-    $link = netangelss3_s3_name($link);
-    $link = netangelss3_urlGetFullUrl($link);
-    netangelss3_writelog('netangelss3_wp_get_attachment_url s3_file_or_not_found:' . $link);
-    return $link;
 }
 
 add_filter('wp_get_attachment_url', 'netangelss3_wp_get_attachment_url', 10, 2);
@@ -686,6 +680,28 @@ function netangelss3_wp_get_attachment_thumb_file($thumbFile, $id)
 }
 
 if (NETANGELSS3_DEBUG_FILTER) {
+function netangelss3_wp_get_attachment_image_src( $attachment_id, $size, $icon )
+{
+    netangelss3_writelog('netangelss3_wp_get_attachment_image_src link:'.$attachment_id);
+    netangelss3_writelog('netangelss3_wp_get_attachment_image_src size:'.$size);
+    netangelss3_writelog('netangelss3_wp_get_attachment_image_src icon'.$icon);
+    $result = wp_get_attachment_image_src( $attachment_id, $size, $icon );
+    foreach($result as $k =>$v) { netangelss3_writelog('netangelss3_wp_get_attachment_image_src result:'.$k.'='.$v); }
+    return $result;
+}
+if (NETANGELSS3_DEBUG_FILTER)
+{
+    add_filter('wp_get_attachment_image_src', 'netangelss3_wp_get_attachment_image_src', 10, 2);
+}
+//---------------------------------------
+function netangelss3_wp_get_attachment_thumb_file($thumbFile,$id)
+{
+    netangelss3_writelog('netangelss3_wp_get_attachment_thumb_file thumbFile:'.$thumbFile);
+    netangelss3_writelog('netangelss3_wp_get_attachment_thumb_file id:'.$id);
+    return $thumbFile;
+}
+if (NETANGELSS3_DEBUG_FILTER)
+{
     add_filter('wp_get_attachment_thumb_file', 'netangelss3_wp_get_attachment_thumb_file');
 }
 //-------------------------------------
@@ -704,6 +720,17 @@ function netangelss3_wp_get_attachment_link($id, $size, $permalink, $icon, $text
 }
 
 if (NETANGELSS3_DEBUG_FILTER) {
+    netangelss3_writelog('netangelss3_wp_get_attachment_link id:'.$id);
+    netangelss3_writelog('netangelss3_wp_get_attachment_link size:'.$size);
+    netangelss3_writelog('netangelss3_wp_get_attachment_link permalink:'.$permalink);
+    netangelss3_writelog('netangelss3_wp_get_attachment_link icon:'.$icon);
+    netangelss3_writelog('netangelss3_wp_get_attachment_link text:'.$text);
+    foreach($attr as $k =>$v) { netangelss3_writelog('netangelss3_wp_get_attachment_link attr:'.$k.'='.$v); }
+    netangelss3_writelog('netangelss3_wp_get_attachment_link id:'.$id);
+    return wp_get_attachment_link($id,$size,$permalink,$icon,$text,$attr );
+}
+if (NETANGELSS3_DEBUG_FILTER)
+{
     add_filter('wp_get_attachment_link', 'netangelss3_wp_get_attachment_link');
 }
 //-------------------------------------
@@ -715,6 +742,12 @@ function netangelss3_get_attached_file($file, $attachment_id)
 }
 
 if (NETANGELSS3_DEBUG_FILTER) {
+    netangelss3_writelog('netangelss3_get_attached_file file:'.$file);
+    netangelss3_writelog('netangelss3_get_attached_file attachment_id:'.$attachment_id);
+    return $file;
+}
+if (NETANGELSS3_DEBUG_FILTER)
+{
     add_filter('get_attached_file', 'netangelss3_get_attached_file');
 }
 //-------------------------------------
@@ -845,7 +878,7 @@ function netangelss3_uploadTaskAtth()
     if (NETANGELSS3_WPCRON_DEBUG) {
         wp_mail($admin_email, 'WPCRON_DEBUG_START_2', '2');
     }
-
+    
     if ($enable != '1') {
         if (NETANGELSS3_WPCRON_DEBUG) {
             wp_mail($admin_email, 'WPCRON_DEBUG_START', 'NOT_ENABLE');
@@ -863,6 +896,7 @@ function netangelss3_uploadTaskAtth()
     $s3 = netangelss3_create();
     $upload_dir = wp_upload_dir();
     $upload_dir_path = $upload_dir['basedir'];
+    $thumbimgs = array();
     $args = array('post_type' => 'attachment', 'numberposts' => -1, 'post_status' => null, 'post_parent' => null);
     $attachments = get_posts($args);
     if (!$attachments) {
