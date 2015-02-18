@@ -200,6 +200,7 @@ function netangelss3_remoteFileExists($path)
     }
 
     $result = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    netangelss3_writelog('netangelss3_remoteFileExists http_code'.$result);
     $ret_result = false;
     if ($result == 200) {
         netangelss3_writelog('netangelss3_remoteFileExists result true ');

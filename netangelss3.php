@@ -963,14 +963,14 @@ function netangelss3_uploadTaskAtth()
             $s .= '-- ' . $fullpath . '=>' . $fl . "\r\n";
             $file_size = filesize($fullpath);
             $all_transfer_size = $all_transfer_size + $file_size;
-        }
+        } // files 
 
         if (NETANGELSS3_WPCRON_DEBUG) {
             wp_mail($admin_email, 'WPCRON_DEBUG', $s);
         }
         $count++;
         // чтобы хотя бы один файл за раз
-    }
+    } // attachs
 
 }
 
