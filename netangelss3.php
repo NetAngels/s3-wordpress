@@ -14,17 +14,19 @@ define(NETANGELSS3_JS_DEBUG, false);
 define(NETANGELSS3_WPCRON_DEBUG, true);
 define(NETANGELSS3_DEBUG_LOG, true);
 define(NETANGELSS3_DEBUG_FILTER, false);
-define(NETANGELSS3_AUTO_UPLOAD_TYPE, 'files'); // files or atth
-//define(NETANGELSS3_AUTO_UPLOAD_TYPE, 'atth');
+//define(NETANGELSS3_AUTO_UPLOAD_TYPE, 'files'); // files or atth
+define(NETANGELSS3_AUTO_UPLOAD_TYPE, 'atth');
 define(NETANGELSS3_ENABLE_TESTS, true);
 define(NETANGELSS3_ENABLE_TESTS_STR, 'Тесты');
-define(NETANGELSS3_DEBUG_LOGFILE, __DIR__ . DIRECTORY_SEPARATOR . 'netangelss3.log');
-//define(NETANGELSS3_DEBUG_LOGFILE, '/var/log/netangelss3.log');
+//define(NETANGELSS3_DEBUG_LOGFILE, __DIR__ . DIRECTORY_SEPARATOR . 'netangelss3.log');
+define(NETANGELSS3_DEBUG_LOGFILE, '/var/log/netangelss3.log');
 
 define(NETANGELSS3_CURL_USERAGENT, 'Mozilla 4.0 (Netangels S3 Wordpress Plugin)');
 
 define(NETANGELSS3_DOWNLOAD_SPECIAL_DIR, false);
 define(NETANGELSS3_DOWNLOAD_SPECIAL_DIR_NAME, 'from_netangels_s3');
+
+define(NETANGELSS3_DONT_UPLOAD_IF_REMOTE_EXISTS, false);
 
 define(NETANGELSS3_MAX_FILES_PER_TIME, 100);
 define(NETANGELSS3_MAX_SIZE_PER_TIME, 209715200);
@@ -242,6 +244,59 @@ function netangelss3_options_view()
 // Функция для тестирования
 function netangelss3_tests()
 {
+    print '<br /><br /><br />UPLOD_DIR:<br />';
+    print '<pre>';
+    $arr1['key_id'] = get_option('netangelss3_key_id');
+    
+    $arr1['secret_key'] = get_option('netangelss3_secret_key');
+    $arr1['enable'] = get_option('netangelss3_auto_enable');
+    $arr1['send_errors'] = get_option('netangelss3_senderrors');
+    $arr1['netangelss3_connection_status'] = get_option('netangelss3_connection_status');
+    $arr1['netangelss3_connection_status'] = get_option('netangelss3_connection_status');
+    $arr1['bucket'] = get_option('netangelss3_bucket');
+    $arr1['--bucket_url'] =  netangelss3_getDefaultBucket();
+    $bucket = netangelss3_getDefaultBucket();
+    $arr1['url'] = 'http://' . $bucket . '.' . NETANGELSS3_ENDPOINT . '/';
+    foreach($arr1 as $k => $v)
+    {
+      print $k.' : '.$v."\r\n";
+    }
+    print '</pre>';
+    print '<hr>';
+    //-------------------------------------------
+    $upload_dir = wp_upload_dir();
+    print '<br /><br /><br />UPLOD_DIR:<br />';
+    print '<pre>';
+    print_r($upload_dir);
+    print '</pre>';
+    print '<hr>';
+    //-------------------------------------------
+    $args = array('post_type' => 'attachment', 'numberposts' => -1, 'post_status' => null, 'post_parent' => null);
+    $attachments = get_posts($args);
+    foreach ($attachments as $post) {
+        $files = array();
+        if (is_array($imagedata = wp_get_attachment_metadata($post->ID, true))) {
+            $files[] = $imagedata['file'];
+            $path_parts = pathinfo($imagedata['file']);
+            if (is_array($imagedata['sizes'])) {
+                foreach ($imagedata['sizes'] as $item) {
+                    $files[] = $path_parts['dirname'] . DIRECTORY_SEPARATOR . $item['file'];
+
+                }
+            }
+        }
+        foreach ($files as $fl) {
+            $fullpath = $upload_dir['basedir'] . DIRECTORY_SEPARATOR . $fl;
+            $exists = '0';
+            if (file_exists($fullpath)) {
+                $exists = '<b>1</b>';
+            }
+            print  $fullpath . ' ' . $exists . '<br />';
+        }
+        echo "-----<br />";
+    }
+
+    //--------------------------------------------
     $files = array();
     $upload_dir = wp_upload_dir();
     netangelss3_filelistGet($files, $upload_dir['basedir']);
@@ -652,6 +707,11 @@ function netangelss3_wp_get_attachment_url($link, $id)
         netangelss3_writelog('netangelss3_wp_get_attachment_url s3_file_or_not_found:' . $link);
         return $link;
     }
+    $upload_dir = wp_upload_dir();
+    $link = strtr($link, array($upload_dir['baseurl'] => ''));
+    $link = netangelss3_s3_name($link);
+    $link = netangelss3_urlGetFullUrl($link);
+    return $link;
 }
 
 add_filter('wp_get_attachment_url', 'netangelss3_wp_get_attachment_url', 10, 2);
@@ -881,13 +941,12 @@ function netangelss3_uploadTaskAtth()
             if (is_array($imagedata['sizes'])) {
                 foreach ($imagedata['sizes'] as $item) {
                     $files[] = $path_parts['dirname'] . DIRECTORY_SEPARATOR . $item['file'];
-
                 }
             }
         }
         foreach ($files as $fl) {
-            $fullpath = $upload_dir_path . DIRECTORY_SEPARATOR . $fl;
-            $name1 = strtr($fl, array($upload_dir['basedir'] => '/'));
+            $fullpath = $upload_dir['basedir'] . DIRECTORY_SEPARATOR . $fl;
+            $name1 = strtr($fullpath, array($upload_dir['basedir'] => ''));
             $name2 = netangelss3_s3_name($name1);
             if (!file_exists($fullpath)) continue;
             if ($all_transfer_size > NETANGELSS3_MAX_SIZE_PER_TIME) {
@@ -898,12 +957,17 @@ function netangelss3_uploadTaskAtth()
             }
             if (netangelss3_remoteFileExists($name2)) {
                 $exists = '1';
-                $name2 = netangelss3_s3_namewithMd5($name1, $name2);
+                $s .= $name2 . ' remote exists ';
+                $name2 = netangelss3_s3_namewithMd5($fullpath, $name2);
+                $s .= ' new name2: ' . $name2 . "\r\n";
+                if (NETANGELSS3_DONT_UPLOAD_IF_REMOTE_EXISTS) {
+                    continue;
+                }
             }
             $r = netangelss3_sendToCloud($s3, $fullpath, $name2);
             if (!$r) {
                 if (NETANGELSS3_WPCRON_DEBUG) {
-                    wp_mail($admin_email, 'WPCRON_DEBUG_ERROR', 'Cant upload file:' . $fl . NETANGELSS3_HTML_NEWLINE . NETANGELSS3_HTML_NEWLINE . $s);
+                    wp_mail($admin_email, 'WPCRON_DEBUG_ERROR', 'Cant upload file:' . $fullpath . NETANGELSS3_HTML_NEWLINE . NETANGELSS3_HTML_NEWLINE . $s);
                 }
                 $send_errors = get_option('netangelss3_senderrors');
                 if ($send_errors != '1') {
@@ -918,7 +982,7 @@ function netangelss3_uploadTaskAtth()
                     netangelss3_writelog('netangelss3_uploadTaskAtth: remotefile exists:' . $name2);
                     wp_mail($admin_email, 'WPCRON_DEBUG', 'netangelss3_uploadTaskAtth: remotefile exists:' . $name2 . ' DELETE:' . $name1);
                 }
-                unlink($upload_dir['basedir'] . $name1);
+                unlink($fullpath);
                 netangelss3_removeAttach($name1);
                 netangelss3_replace_in_post_and_pages($from2, $r);
             }
