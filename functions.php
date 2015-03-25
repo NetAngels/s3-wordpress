@@ -1,8 +1,6 @@
 <?php
 
-
-function  netangelss3_filelistGet(&$filelst, $path)
-{
+function  netangelss3_filelistGet(&$filelst, $path) {
     if (!is_dir($path)) return false;
     $dh = opendir($path);
     if ($dh === false) return false;
@@ -22,19 +20,16 @@ function  netangelss3_filelistGet(&$filelst, $path)
     closedir($dh);
 }
 
-function netangelss3_setuped()
-{
+function netangelss3_setuped() {
     $key_id = trim(get_option('netangelss3_key_id'));
     $secret_key = trim(get_option('netangelss3_secret_key'));
     if ($key_id != '' and $secret_key != '') {
         return true;
     }
     return false;
-
 }
 
-function netangelss3_connected()
-{
+function netangelss3_connected() {
     $netangelss3_connection_status = get_option('netangelss3_connection_status');
     if ($netangelss3_connection_status == '1') {
         return true;
@@ -42,28 +37,25 @@ function netangelss3_connected()
     return false;
 }
 
-function netangelss3_getDefaultBucket()
-{
+function netangelss3_getDefaultBucket() {
     return get_option('netangelss3_bucket', '');
 }
 
-function netangelss3_create()
-{
+function netangelss3_create() {
     if (isset($GLOBALS['netangelss3_obj'])) return $GLOBALS['netangelss3_obj'];
     $key_id = trim(get_option('netangelss3_key_id'));
     $secret_key = trim(get_option('netangelss3_secret_key'));
-    $bucket = get_option('netangelss3_bucket'); // прелоад =)
+    $bucket = get_option('netangelss3_bucket'); // прелодер
     $s3 = new S3($key_id, $secret_key);
     $GLOBALS['netangelss3_obj'] = $s3;
     return $s3;
 }
 
-function netangelss3_removeAttach($file_path)
-{
+function netangelss3_removeAttach($file_path) {
     global $wpdb;
     if (!NETANGELSS3_ATTH_REMOVE_ON_MOVE) return false;
     $upload_dir = wp_upload_dir();
-    #$upload_dir['basedir'] 
+    #$upload_dir['basedir']
     $local_path_url = $upload_dir['baseurl'];
     if (substr($local_path_url, strlen($local_path_url) - 1, 1) != '/') {
         $local_path_url += '/';
@@ -71,8 +63,7 @@ function netangelss3_removeAttach($file_path)
     //$wpdb->query($wpdb->prepare('UPDATE wp_postmeta SET meta_value = REPLACE ( meta_value, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
 }
 
-function netangelss3_getAttachmentList()
-{
+function netangelss3_getAttachmentList() {
     $thumbimgs = array();
     $args = array('post_type' => 'attachment', 'numberposts' => -1, 'post_status' => null, 'post_parent' => null);
     $attachments = get_posts($args);
@@ -92,8 +83,7 @@ function netangelss3_getAttachmentList()
     return $thumbimgs;
 }
 
-function netangelss3_getAttachmentFilesList($remove_upload_dir = false)
-{
+function netangelss3_getAttachmentFilesList($remove_upload_dir = false) {
     $upload_dir = wp_upload_dir();
     $thumbimgs = array();
     $args = array('post_type' => 'attachment', 'numberposts' => -1, 'post_status' => null, 'post_parent' => null);
@@ -127,21 +117,19 @@ function netangelss3_getAttachmentFilesList($remove_upload_dir = false)
     return $thumbimgs;
 }
 
-function netangelss3_replace_in_post_and_pages($from, $to, $to_local = false)
-{
+function netangelss3_replace_in_post_and_pages($from, $to, $to_local = false) {
     global $wpdb;
     netangelss3_writelog('netangelss3_replace_in_post_and_pages from:' . $from);
     netangelss3_writelog('netangelss3_replace_in_post_and_pages to:' . $to);
     netangelss3_writelog('netangelss3_replace_in_post_and_pages $to_local:' . $to_local);
     $wpdb->query($wpdb->prepare('UPDATE wp_posts SET post_content = REPLACE ( post_content, %s,  %s) WHERE post_content LIKE "%%%s%%"', $from, $to, $from));
-
     $wpdb->query($wpdb->prepare('UPDATE wp_postmeta SET meta_value = REPLACE ( meta_value, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
 
     //$wpdb->query($wpdb->prepare('UPDATE wp_posts SET guid = REPLACE ( guid, %s,  %s) WHERE meta_value LIKE "%%%s%%"', $from, $to, $from));
 
     /*
     $upload_dir = wp_upload_dir();
-    $upload_dir['basedir'] 
+    $upload_dir['basedir']
     $local_path_url=$upload_dir['baseurl'];
     if (substr($local_path_url,len($local_path_url)-1,1) != '/')
     {
@@ -151,8 +139,7 @@ function netangelss3_replace_in_post_and_pages($from, $to, $to_local = false)
     */
 }
 
-function netangelss3_sendToCloud($s3inc, $uploadFile, $objname = '')
-{
+function netangelss3_sendToCloud($s3inc, $uploadFile, $objname = '') {
     if (!$s3inc) {
         return false;
     }
@@ -165,8 +152,7 @@ function netangelss3_sendToCloud($s3inc, $uploadFile, $objname = '')
     return netangelss3_urlGetFullUrl($objname);
 }
 
-function netangelss3_FileInAtth($file)
-{
+function netangelss3_FileInAtth($file) {
     $atths = netangelss3_getAttachmentFilesList(true);
     if (in_array($file, $atths)) {
         return true;
@@ -174,8 +160,7 @@ function netangelss3_FileInAtth($file)
     return false;
 }
 
-function netangelss3_remoteFileExists($path)
-{
+function netangelss3_remoteFileExists($path) {
     netangelss3_writelog('netangelss3_remoteFileExists path before fix'.$path);
     if ((strpos($path, 'http://') === false) and (strpos($path, 'https://') === false)) {
         $path = netangelss3_urlGetFullUrl($path, True);
@@ -211,8 +196,7 @@ function netangelss3_remoteFileExists($path)
 }
 
 
-function netangelss3_sendToCloudInSync($s3inc, $uploadFile, $objname = '')
-{
+function netangelss3_sendToCloudInSync($s3inc, $uploadFile, $objname = '') {
     if (!$s3inc) {
         return false;
     }
@@ -232,8 +216,7 @@ function netangelss3_sendToCloudInSync($s3inc, $uploadFile, $objname = '')
 }
 
 
-function netangelss3_deleteInCloud($s3inc, $name)
-{
+function netangelss3_deleteInCloud($s3inc, $name) {
     if (!$s3inc) {
         return false;
     }
@@ -243,31 +226,28 @@ function netangelss3_deleteInCloud($s3inc, $name)
     return true;
 }
 
-function netangelss3_getFromCloud($s3inc, $name, $destfile)
-{
+function netangelss3_getFromCloud($s3inc, $name, $destfile) {
     netangelss3_writelog('netangelss3_getFromCloud name:' . $name);
     $url = netangelss3_urlGetFullUrl($name, true);
     netangelss3_writelog('netangelss3_getFromCloud url:' . $url);
-    $fp = fopen($destfile, 'w+'); //This is the file where we save the    information
-    $ch = curl_init(str_replace(" ", "%20", $url)); //Here is the file we are downloading, replace spaces with %20
+    $fp = fopen($destfile, 'w+');
+    $ch = curl_init(str_replace(" ", "%20", $url));
     curl_setopt($ch, CURLOPT_TIMEOUT, 50);
-    curl_setopt($ch, CURLOPT_FILE, $fp); // write curl response to file
+    curl_setopt($ch, CURLOPT_FILE, $fp);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla 4.0 (Netangels S3 Wordpress Plugin)');
-    curl_exec($ch); // get curl response
+    curl_exec($ch);
     curl_close($ch);
     fclose($fp);
 }
 
-function netangelss3_s3_name($name)
-{
+function netangelss3_s3_name($name) {
     $name = substr($name, 1);
     netangelss3_writelog('netangelss3_s3_name return  name'.$name);
     return $name;
 }
 
-function netangelss3_s3_namewithMd5($fullname, $name2)
-{
+function netangelss3_s3_namewithMd5($fullname, $name2) {
     $path_parts = pathinfo($name2);
     $md5OfFile = md5_file($fullname);
     $name = $path_parts['dirname'] . DIRECTORY_SEPARATOR . $path_parts['filename'] . '-' . $md5OfFile . '.' . $path_parts['extension'];
@@ -275,8 +255,7 @@ function netangelss3_s3_namewithMd5($fullname, $name2)
 }
 
 
-function netangelss3_urlGetFullUrl($name, $encode = false)
-{
+function netangelss3_urlGetFullUrl($name, $encode = false) {
     //print '<pre>'; var_dump($encode); print '</pre>';
     $bucket = netangelss3_getDefaultBucket();
     if (substr($name, 0, 1) == '/') {
@@ -291,7 +270,7 @@ function netangelss3_urlGetFullUrl($name, $encode = false)
         }
         $name_arr = $name_arr2;
         $name = implode('/', $name_arr);
-        // Убирает утечки памяти 8)
+        // Убирает утечки памяти
         $name_arr = array();
         $name_arr2 = array();
     }
@@ -299,13 +278,11 @@ function netangelss3_urlGetFullUrl($name, $encode = false)
     return $url;
 }
 
-function netangelss3_getList($s3inc)
-{
+function netangelss3_getList($s3inc) {
     return $s3inc->getBucket(netangelss3_getDefaultBucket());
 }
 
-function netangelss3_fine_size($bytes)
-{
+function netangelss3_fine_size($bytes) {
     $bytes = floatval($bytes);
     $arBytes = array(
         0 => array(
@@ -340,14 +317,12 @@ function netangelss3_fine_size($bytes)
     return $result;
 }
 
-function netangelss3_filesize($fl)
-{
+function netangelss3_filesize($fl) {
     $upload_dir = wp_upload_dir();
     return filesize($upload_dir['basedir'] . $fl);
 }
 
-function netangelss3_fileDesc($file)
-{
+function netangelss3_fileDesc($file) {
     $upload_dir = wp_upload_dir();
     $full_file = $upload_dir['basedir'] . $file;
     if (strpos($file, '/' . NETANGELSS3_DOWNLOAD_SPECIAL_DIR_NAME . '/') !== false) {
@@ -355,8 +330,7 @@ function netangelss3_fileDesc($file)
     }
 }
 
-function netangelss3_getTypeByName($name)
-{
+function netangelss3_getTypeByName($name) {
     $filetype = wp_check_filetype($name);
     list($maintype, $subtype) = explode('/', $filetype['type']);
     $filetype['maintype'] = $maintype;
@@ -366,8 +340,7 @@ function netangelss3_getTypeByName($name)
     return $filetype;
 }
 
-function netangelss3_getLiElement($item)
-{
+function netangelss3_getLiElement($item) {
     $name = $item['name'];
     $url = netangelss3_urlGetFullUrl($name);
     $type = netangelss3_getTypeByName($name);
@@ -391,8 +364,7 @@ function netangelss3_getLiElement($item)
     return $s;
 }
 
-function netangelss3_writelog($message, $level = 'DEBUG')
-{
+function netangelss3_writelog($message, $level = 'DEBUG') {
     if (NETANGELSS3_DEBUG_LOG) {
         touch(NETANGELSS3_DEBUG_LOGFILE);
         $f = fopen(NETANGELSS3_DEBUG_LOGFILE, 'a');

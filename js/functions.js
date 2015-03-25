@@ -2,16 +2,7 @@
  * Created by SB on 06.11.14.
  */
 //----------------------------------------------------------
-function debug(s)
-{
-    if (window.js_debug)
-    {
-        if (window.console)
-        {
-            console.log(s);
-        }
-    }
-}
+
 function showNoMoreFiles()
 {
     jQuery('#files_table').hide();
@@ -49,7 +40,7 @@ function onCanceled()
 }
 function onEnded()
 {
-    
+
 }
 
 
